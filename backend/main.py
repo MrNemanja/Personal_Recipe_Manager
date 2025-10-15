@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Path
 from typing import Optional
 from pydantic import BaseModel, Field
+
 app = FastAPI()
 
 dummy_list = {
@@ -40,6 +41,7 @@ class UpdateRecipe(BaseModel):
     preperation_time: Optional[int] = Field(None, gt=0, description="Time in minutes before the ingredients are prepared")
     dish_type: Optional[str] = Field(None, min_length=1, description="Type of the recipe")
     calories: Optional[int] = Field(None, gt=0, description="Calories of the recipe")
+
 @app.get("/recipes/{id}")
 async def recipes(*, id: int = Path(description="The ID of the recipe you want to view", gt=0), limit: Optional[int] = None, search: Optional[str] = None):
     if id in dummy_list:
