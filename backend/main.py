@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Path
 from typing import Optional
+from pydantic import BaseModel, Field
 app = FastAPI()
 
 dummy_list = {
@@ -26,7 +27,19 @@ dummy_list = {
     }
 }
 
+class Recipe(BaseModel):
+    recipe_name: str = Field(..., min_length=1, description="Name of the recipe")
+    recipe_ingredients: list[str] = Field(..., min_items=1, description="Ingredients of the recipe")
+    preperation_time: int = Field(...,gt=0, description="Time in minutes before the ingredients are prepared")
+    dish_type: str = Field(...,min_length=1, description="Type of the recipe")
+    calories: int = Field(...,gt=0, description="Calories of the recipe")
 
+class UpdateRecipe(BaseModel):
+    recipe_name: Optional[str] = Field(None, min_length=1, description="Name of the recipe")
+    recipe_ingredients: Optional[list[str]] = Field(None, min_items=1, description="Ingredients of the recipe")
+    preperation_time: Optional[int] = Field(None, gt=0, description="Time in minutes before the ingredients are prepared")
+    dish_type: Optional[str] = Field(None, min_length=1, description="Type of the recipe")
+    calories: Optional[int] = Field(None, gt=0, description="Calories of the recipe")
 @app.get("/recipes/{id}")
 async def recipes(*, id: int = Path(description="The ID of the recipe you want to view", gt=0), limit: Optional[int] = None, search: Optional[str] = None):
     if id in dummy_list:
@@ -51,3 +64,28 @@ async def recipes(*, id: int = Path(description="The ID of the recipe you want t
     else:
         raise HTTPException(status_code=404, detail="Recipe not found")
 
+@app.post("/recipes")
+async def create_recipe(recipe: Recipe):
+
+    new_id = max(dummy_list.keys(), default=0) + 1
+    dummy_list[new_id] = recipe.model_dump()
+
+    return {"id" : new_id, "message" : "Recipe created successfully"}
+
+@app.put("/recipes/{id}")
+async def update_recipe(id: int, recipe: UpdateRecipe):
+    if id not in dummy_list:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    else:
+        if recipe.recipe_name != None:
+            dummy_list[id]["recipe_name"] = recipe.recipe_name
+        if recipe.recipe_ingredients != None:
+            dummy_list[id]["recipe_ingredients"] = recipe.recipe_ingredients
+        if recipe.preperation_time != None:
+            dummy_list[id]["preperation_time"] = recipe.preperation_time
+        if recipe.dish_type != None:
+            dummy_list[id]["dish_type"] = recipe.dish_type
+        if recipe.calories != None:
+            dummy_list[id]["calories"] = recipe.calories
+
+    return {"id" : id, "message" : "Recipe updated successfully"}
