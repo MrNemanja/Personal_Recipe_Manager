@@ -2,8 +2,10 @@ from fastapi import FastAPI, HTTPException, Path
 from typing import Optional
 from pydantic import BaseModel, Field
 
+#Start-up for FastAPI
 app = FastAPI()
 
+#Test-data
 dummy_list = {
     1: {
         "recipe_name" : "Karbonara",
@@ -28,6 +30,7 @@ dummy_list = {
     }
 }
 
+#In this format our backend need to get data from our frontend. This refers to POST method
 class Recipe(BaseModel):
     recipe_name: str = Field(..., min_length=1, description="Name of the recipe")
     recipe_ingredients: list[str] = Field(..., min_items=1, description="Ingredients of the recipe")
@@ -35,6 +38,7 @@ class Recipe(BaseModel):
     dish_type: str = Field(...,min_length=1, description="Type of the recipe")
     calories: int = Field(...,gt=0, description="Calories of the recipe")
 
+#In this format our backend need to get data from our frontend. This refers to PUT method
 class UpdateRecipe(BaseModel):
     recipe_name: Optional[str] = Field(None, min_length=1, description="Name of the recipe")
     recipe_ingredients: Optional[list[str]] = Field(None, min_items=1, description="Ingredients of the recipe")
@@ -42,6 +46,7 @@ class UpdateRecipe(BaseModel):
     dish_type: Optional[str] = Field(None, min_length=1, description="Type of the recipe")
     calories: Optional[int] = Field(None, gt=0, description="Calories of the recipe")
 
+#Get recipe by recipe id
 @app.get("/recipes/{id}")
 async def recipes(*, id: int = Path(description="The ID of the recipe you want to view", gt=0), limit: Optional[int] = None, search: Optional[str] = None):
     if id in dummy_list:
@@ -66,6 +71,7 @@ async def recipes(*, id: int = Path(description="The ID of the recipe you want t
     else:
         raise HTTPException(status_code=404, detail="Recipe not found")
 
+#Create new recipe
 @app.post("/recipes")
 async def create_recipe(recipe: Recipe):
 
@@ -74,6 +80,7 @@ async def create_recipe(recipe: Recipe):
 
     return {"id" : new_id, "message" : "Recipe created successfully"}
 
+#Update existing recipe
 @app.put("/recipes/{id}")
 async def update_recipe(id: int, recipe: UpdateRecipe):
     if id not in dummy_list:
@@ -91,3 +98,13 @@ async def update_recipe(id: int, recipe: UpdateRecipe):
             dummy_list[id]["calories"] = recipe.calories
 
     return {"id" : id, "message" : "Recipe updated successfully"}
+
+#Delete existing recipe
+@app.delete("/recipes/{id}")
+async def delete_recipe(id: int):
+    if id not in dummy_list:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    else:
+        del dummy_list[id]
+
+    return {"id" : id, "message" : "Recipe deleted successfully"}
