@@ -2,10 +2,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+# SQLAlchemy engine and session setup for SQLite
 engine = create_engine('sqlite:///recipes.db', connect_args={'check_same_thread': False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Base is the declarative base for models
 Base = declarative_base()
 
+# get_db() is used as a FastAPI dependency to provide a session per request
 def get_db():
     db = SessionLocal()
     try:

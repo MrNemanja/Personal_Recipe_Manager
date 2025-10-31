@@ -6,17 +6,19 @@ from schemas import Recipe as RecipeSchema
 from schemas import UpdateRecipe, RecipeResponse
 from typing import List
 
+# Routes for managing recipes
 router = APIRouter(
     prefix="/recipes",
     tags=["Recipes"]
 )
 
+# GET / -> list all recipes
 @router.get("/", response_model=List[RecipeResponse])
 async def get_recipes(db: Session = Depends(get_db)):
     recipes = db.query(RecipeModel).all()
     return recipes
 
-#Get recipe by recipe id
+# GET /{id} -> get a single recipe by ID
 @router.get("/{id}", response_model=RecipeResponse)
 async def get_recipe_by_id(id: int = Path(description="The ID of the recipe you want to view", gt=0), db: Session = Depends(get_db)):
     recipe = db.query(RecipeModel).filter(RecipeModel.id == id).first()
@@ -26,7 +28,7 @@ async def get_recipe_by_id(id: int = Path(description="The ID of the recipe you 
     else:
         return recipe
 
-#Create new recipe
+# POST / -> create a new recipe
 @router.post("/", response_model=RecipeResponse)
 async def create_recipe(recipe: RecipeSchema, db: Session = Depends(get_db)):
     if db.query(RecipeModel).filter(RecipeModel.recipe_name == recipe.recipe_name).first():
@@ -38,7 +40,7 @@ async def create_recipe(recipe: RecipeSchema, db: Session = Depends(get_db)):
     db.refresh(new_recipe)
     return new_recipe
 
-#Update existing recipe
+# PUT /{id} -> update an existing recipe
 @router.put("/{id}", response_model=RecipeResponse)
 async def update_recipe(id: int, updateRecipe: UpdateRecipe, db: Session = Depends(get_db)):
     recipe = db.query(RecipeModel).filter(RecipeModel.id == id).first()
@@ -54,7 +56,7 @@ async def update_recipe(id: int, updateRecipe: UpdateRecipe, db: Session = Depen
     db.refresh(recipe)
     return recipe
 
-#Delete existing recipe
+# DELETE /{id} -> delete a recipe
 @router.delete("/{id}")
 async def delete_recipe(id: int, db: Session = Depends(get_db)):
     recipe = db.query(RecipeModel).filter(RecipeModel.id == id).first()
