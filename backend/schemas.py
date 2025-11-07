@@ -9,18 +9,6 @@ class Recipe(BaseModel):
     dish_type: str = Field(...,min_length=1, description="Type of the recipe")
     calories: int = Field(...,gt=0, description="Calories of the recipe")
 
-# RecipeResponse: response model for returning recipe data
-class RecipeResponse(BaseModel):
-    id: int
-    recipe_name: str
-    recipe_ingredients: List[str]
-    preperation_time: int
-    dish_type: str
-    calories: int
-
-    class Config:
-        from_attributes = True
-
 # UpdateRecipe: request model for updating recipe fields (optional fields)
 class UpdateRecipe(BaseModel):
     recipe_name: Optional[str] = Field(None, min_length=1, description="Name of the recipe")
@@ -29,11 +17,28 @@ class UpdateRecipe(BaseModel):
     dish_type: Optional[str] = Field(None, min_length=1, description="Type of the recipe")
     calories: Optional[int] = Field(None, gt=0, description="Calories of the recipe")
 
+# RecipeResponse: response model for returning recipe data
+class RecipeResponse(BaseModel):
+    id: int
+    recipe_name: str
+    recipe_ingredients: List[str]
+    preperation_time: int
+    dish_type: str
+    calories: int
+    image_url : str
+
+    class Config:
+        from_attributes = True
+
 # CreateUser: request model for registering a user
 class CreateUser(BaseModel):
     username: str = Field(...,min_length=3, description="Username")
     password: str = Field(...,min_length=6, description="Password")
     email: str = EmailStr
+
+class LoginUser(BaseModel):
+    username: str
+    password: str
 
 # UserResponse: response model for returning user info
 class UserResponse(BaseModel):

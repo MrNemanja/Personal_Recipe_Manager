@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.orm import Relationship
+from sqlalchemy.orm import relationship
 from sqlalchemy.types import JSON
 from database import Base
 
@@ -12,9 +12,13 @@ class Recipe(Base):
     preperation_time = Column(Integer, nullable=False)
     dish_type = Column(String, nullable=False)
     calories = Column(Integer, nullable=False)
+    image_url = Column(String, nullable=True)
+
+    owner_id = Column(Integer, ForeignKey("users.id"))
+    recipe_owner = relationship("User", back_populates="owned_recipes")
 
     # favorited_by establishes a many-to-one relationship with User
-    favorited_by = Relationship("User", back_populates="favorite_recipe")
+    favorited_by = relationship("User", back_populates="favorite_recipe")
 
 # User model: stores user details
 class User(Base):
@@ -28,6 +32,7 @@ class User(Base):
     favorite_recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=True)
 
     # favorite_recipe relationship allows easy access to user's favorite recipe
-    favorite_recipe = Relationship("Recipe", back_populates="favorited_by")
+    favorite_recipe = relationship("Recipe", back_populates="favorited_by")
+    owned_recipes = relationship("Recipe", back_populates="recipe_owner")
 
 

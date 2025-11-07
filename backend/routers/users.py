@@ -2,8 +2,9 @@ from fastapi import APIRouter, Path, HTTPException, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User, Recipe
-from schemas import CreateUser, UserResponse, RecipeResponse
+from schemas import CreateUser, UserResponse, RecipeResponse, LoginUser
 from passlib.context import CryptContext
+from auth import create_access_token
 
 # Routes for managing users and their favorite recipes
 router = APIRouter(
@@ -37,6 +38,18 @@ def register_user(user: CreateUser, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     return new_user
+
+@router.post("/login")
+def login_user(login_user: LoginUser, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == login_user.username).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    if not pwd_context.verify(login_user.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    access_token = create_access_token({"user_id": user.id})
+    return {"access_token": access_token, "token_type": "bearer"}
 
 # GET /{user_id}/favorite -> get user's favorite recipe
 @router.get("/{user_id}/favorite", response_model=RecipeResponse)
