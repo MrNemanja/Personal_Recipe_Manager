@@ -3,12 +3,22 @@ from database import Base, engine
 from routers.recipes import router as recipes_router
 from routers.users import router as users_router
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 # Create all tables in the database if they do not exist
 Base.metadata.create_all(bind=engine)
 
 # Start-up for FastAPI
 app = FastAPI()
+
+#
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Include routers for recipes and users
 app.include_router(recipes_router)

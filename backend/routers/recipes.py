@@ -64,7 +64,7 @@ async def get_specific_recipes(limit: int = Query(10, gt=0, le=10, description="
         try:
             ingredients = json.loads(recipe_ingredients)
             for ingredient in ingredients:
-                query = query.filter(RecipeModel.recipe_ingredients.ilike(f"%{ingredient}%"))
+                query = query.filter(RecipeModel.recipe_ingredients.like(f"%{ingredient}%"))
         except:
             pass
 
@@ -118,7 +118,7 @@ async def create_recipe(recipe_name: str = Form(...), recipe_ingredients: str = 
 async def update_recipe(id: int, recipe_name: Optional[str] = Form(None), recipe_ingredients: Optional[str] = Form(None),
                         preperation_time: Optional[int] = Form(None), dish_type: Optional[str] = Form(None),
                         calories: Optional[int] = Form(None), image: Optional[UploadFile] = File(None),
-                        current_user: User = Depends(get_current_user()), db: Session = Depends(get_db)):
+                        current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 
     recipe = db.query(RecipeModel).filter(RecipeModel.id == id).first()
 
@@ -166,7 +166,7 @@ async def update_recipe(id: int, recipe_name: Optional[str] = Form(None), recipe
 
 # DELETE /{id} -> delete a recipe
 @router.delete("/{id}")
-async def delete_recipe(id: int, current_user: User = Depends(get_current_user()), db: Session = Depends(get_db)):
+async def delete_recipe(id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     recipe = db.query(RecipeModel).filter(RecipeModel.id == id).first()
 
     if not recipe:

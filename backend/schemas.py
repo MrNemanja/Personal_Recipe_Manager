@@ -25,7 +25,7 @@ class RecipeResponse(BaseModel):
     preperation_time: int
     dish_type: str
     calories: int
-    image_url : str
+    image_url : Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -34,7 +34,7 @@ class RecipeResponse(BaseModel):
 class CreateUser(BaseModel):
     username: str = Field(...,min_length=3, description="Username")
     password: str = Field(...,min_length=6, description="Password")
-    email: str = EmailStr
+    email: EmailStr
 
 class LoginUser(BaseModel):
     username: str
