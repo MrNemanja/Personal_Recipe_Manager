@@ -4,14 +4,15 @@ header {
     height: 100px;
     display: flex;
     align-items: center; 
-    padding: 0 20px;
+    justify-content: space-between;
+    padding: 0.5rem 1.5rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 nav {
     display: flex;
-    margin-left: auto;
-    gap: 20px;
+    align-items: center;
+    width: 100%;
 }
 
 nav a {
@@ -27,4 +28,29 @@ nav a:hover {
     text-decoration: none;
     font-weight: bold;
     font-size: larger
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; 
+}
+
+.user-avatar {
+    width: 100px;
+    border-radius: 50%;
+}
+
+.username {
+    font-weight: bold;
+    margin: 0;
+    line-height: 1;
+    font-size: 1.2rem;
+    margin-left: -1.5rem
+}
+
+.nav-links {
+    display: flex;
+    gap: 1rem;
+    margin-left: auto;
 }

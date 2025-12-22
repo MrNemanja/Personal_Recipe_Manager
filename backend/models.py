@@ -15,10 +15,10 @@ class Recipe(Base):
     image_url = Column(String, nullable=True)
 
     owner_id = Column(Integer, ForeignKey("users.id"))
-    recipe_owner = relationship("User", back_populates="owned_recipes")
+    recipe_owner = relationship("User", back_populates="owned_recipes", foreign_keys=[owner_id])
 
     # favorited_by establishes a many-to-one relationship with User
-    favorited_by = relationship("User", back_populates="favorite_recipe")
+    favorited_by = relationship("User", back_populates="favorite_recipe", foreign_keys="[User.favorite_recipe_id]")
 
 # User model: stores user details
 class User(Base):
@@ -27,12 +27,13 @@ class User(Base):
     username = Column(String, index=True, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
     email = Column(String, index=True, unique=True, nullable=False)
+    role = Column(String, nullable=False)
 
     # favorite_recipe_id is a foreign key to Recipe
     favorite_recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=True)
 
     # favorite_recipe relationship allows easy access to user's favorite recipe
-    favorite_recipe = relationship("Recipe", back_populates="favorited_by")
-    owned_recipes = relationship("Recipe", back_populates="recipe_owner")
+    favorite_recipe = relationship("Recipe", back_populates="favorited_by", foreign_keys=[favorite_recipe_id])
+    owned_recipes = relationship("Recipe", back_populates="recipe_owner", foreign_keys="[Recipe.owner_id]")
 
 

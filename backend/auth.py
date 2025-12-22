@@ -1,5 +1,6 @@
 import os
 from fastapi import Depends, HTTPException
+from fastapi import Cookie
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from database import get_db
@@ -35,8 +36,34 @@ def verify_access_token(token: str):
     except JWTError:
         return None
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    user_id = verify_access_token(token)
+def get_current_user_optional(access_token: Optional[str] = Cookie(None), db: Session = Depends(get_db)) -> Optional[User]:
+    
+    print("Cookie token:", access_token)
+    if not access_token:
+        return None
+
+    if access_token.startswith("Bearer "):
+        access_token = access_token[len("Bearer "):]
+    print("Token after Bearer cut:", access_token)
+
+    user_id = verify_access_token(access_token)
+    print("Decoded user_id:", user_id)
+    if not user_id:
+        return None
+
+    user = db.query(User).filter(User.id == user_id).first()
+    print("Fetched user:", user)
+    return user
+
+def get_current_user(access_token: Optional[str] = Cookie(None), db: Session = Depends(get_db)):
+    
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    if access_token.startswith("Bearer "):
+        access_token = access_token[len("Bearer "):]
+    
+    user_id = verify_access_token(access_token)
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 

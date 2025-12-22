@@ -4,9 +4,13 @@ from routers.recipes import router as recipes_router
 from routers.users import router as users_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from seed import seed_admin
 
 # Create all tables in the database if they do not exist
 Base.metadata.create_all(bind=engine)
+
+#Seed Admin
+seed_admin()
 
 # Start-up for FastAPI
 app = FastAPI()
@@ -14,7 +18,7 @@ app = FastAPI()
 #
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

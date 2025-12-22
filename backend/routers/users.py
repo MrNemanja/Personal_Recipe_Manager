@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Path, HTTPException, Depends
+from fastapi import APIRouter, Path, HTTPException, Depends, Response
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User, Recipe
 from schemas import CreateUser, UserResponse, RecipeResponse, LoginUser
 from passlib.context import CryptContext
-from auth import create_access_token
+from auth import create_access_token, get_current_user, get_current_user_optional
+from typing import Optional
 
 # Routes for managing users and their favorite recipes
 router = APIRouter(
@@ -13,6 +14,13 @@ router = APIRouter(
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+# GET -> get current user
+@router.get("/me", response_model=Optional[UserResponse])
+def get_me(current_user: Optional[User] = Depends(get_current_user_optional)):
+
+    return current_user
 
 # GET /{id} -> get user by ID
 @router.get("/{id}", response_model=UserResponse)
@@ -25,22 +33,23 @@ def get_user(id: int = Path(description="The ID of the user you want to view", g
         raise HTTPException(status_code=404, detail="User not found")
 
 # POST /register -> create a new user with hashed password
-@router.post("/register", response_model=UserResponse)
+@router.post("/register")
 def register_user(user: CreateUser, db: Session = Depends(get_db)):
     if db.query(User).filter((User.username == user.username) | (User.email == user.email)).first():
         raise HTTPException(status_code=400, detail="User already exists")
 
     hashed_password = pwd_context.hash(user.password)
 
-    new_user = User(username=user.username, password_hash=hashed_password, email=user.email, favorite_recipe_id=None)
+    new_user = User(username=user.username, password_hash=hashed_password, email=user.email, role=user.role, favorite_recipe_id=None)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    return new_user
+    return {"message" : "User registered successfully!"}
 
+# POST /login -> Log in into your account
 @router.post("/login")
-def login_user(login_user: LoginUser, db: Session = Depends(get_db)):
+def login_user(login_user: LoginUser, response: Response, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == login_user.username).first()
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
@@ -49,7 +58,24 @@ def login_user(login_user: LoginUser, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     access_token = create_access_token({"user_id": user.id})
-    return {"access_token": access_token, "token_type": "bearer"}
+
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=1800
+    )
+
+    return {"message": "Login successful"}
+
+# POST /logout -> Log out and return to home page
+@router.post("/logout")
+def logout_user(response: Response):
+    
+    response.delete_cookie(key="access_token")
+    return {"message": "Logged out successfully"}
 
 # GET /{user_id}/favorite -> get user's favorite recipe
 @router.get("/{user_id}/favorite", response_model=RecipeResponse)

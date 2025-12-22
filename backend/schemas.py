@@ -35,6 +35,7 @@ class CreateUser(BaseModel):
     username: str = Field(...,min_length=3, description="Username")
     password: str = Field(...,min_length=6, description="Password")
     email: EmailStr
+    role: str = Field(..., description="Role")
 
 class LoginUser(BaseModel):
     username: str
@@ -45,6 +46,7 @@ class UserResponse(BaseModel):
     id: int
     username: str
     email: EmailStr
+    role: str
 
     class Config:
         from_attributes = True
