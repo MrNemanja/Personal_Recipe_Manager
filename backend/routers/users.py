@@ -2,10 +2,13 @@ from fastapi import APIRouter, Path, HTTPException, Depends, Response
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User, Recipe
-from schemas import CreateUser, UserResponse, RecipeResponse, LoginUser
+from schemas import CreateUser, UserResponse, RecipeResponse, LoginUser, VerifyEmail, ResendEmail
 from passlib.context import CryptContext
 from auth import create_access_token, get_current_user, get_current_user_optional
+from services.email_service import send_verification_email
 from typing import Optional
+from datetime import datetime, timedelta
+import secrets
 
 # Routes for managing users and their favorite recipes
 router = APIRouter(
@@ -34,28 +37,92 @@ def get_user(id: int = Path(description="The ID of the user you want to view", g
 
 # POST /register -> create a new user with hashed password
 @router.post("/register")
-def register_user(user: CreateUser, db: Session = Depends(get_db)):
+async def register_user(user: CreateUser, db: Session = Depends(get_db)):
     if db.query(User).filter((User.username == user.username) | (User.email == user.email)).first():
         raise HTTPException(status_code=400, detail="User already exists")
 
     hashed_password = pwd_context.hash(user.password)
+    token = secrets.token_urlsafe(32)
 
-    new_user = User(username=user.username, password_hash=hashed_password, email=user.email, role=user.role, favorite_recipe_id=None)
+    new_user = User(
+        username=user.username, 
+        password_hash=hashed_password, 
+        email=user.email, 
+        role=user.role,
+        is_verified=False,
+        verification_token=token, 
+        verification_token_expires_at = datetime.utcnow() + timedelta(minutes=1),
+        favorite_recipe_id=None
+        )
+
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    return {"message" : "User registered successfully!"}
+    await send_verification_email(new_user.email, token)
+
+    return {"message" : "Registration successful. Please check your email to verify your account."}
+
+#POST /verify-email -> email verification for registered users
+@router.post("/verify-email")
+async def verify_email(token: VerifyEmail, db: Session = Depends(get_db)):
+
+    user = db.query(User).filter(User.verification_token == token.token).first()
+
+    if not user:
+        raise HTTPException( status_code=400, detail="Invalid or used verification link")
+
+    if user.verification_token_expires_at < datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Verification link has expired")
+
+
+    user.is_verified = True
+    user.verification_token = None
+    user.verification_token_expires_at = None
+
+    db.commit()
+
+    return {"message": "Email successfully verified"}
+
+#POST /resend-verification -> resend email verification for registered users
+@router.post("/resend-verification")
+async def resend_verification(email: ResendEmail, db: Session = Depends(get_db)):
+
+    user = db.query(User).filter(User.email == email.email).first()
+
+    if not user or user.is_verified:
+        return {
+            "message": "If the account exists, a verification email has been sent."
+        }
+
+    new_token = secrets.token_urlsafe(32)
+    user.verification_token = new_token
+    user.verification_token_expires_at = datetime.utcnow() + timedelta(minutes=1)
+    
+    db.commit()
+
+    await send_verification_email(user.email, new_token)
+
+    return {
+        "message": "If the account exists, a verification email has been sent."
+    }
+
 
 # POST /login -> Log in into your account
 @router.post("/login")
-def login_user(login_user: LoginUser, response: Response, db: Session = Depends(get_db)):
+async def login_user(login_user: LoginUser, response: Response, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == login_user.username).first()
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     if not pwd_context.verify(login_user.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    if not user.is_verified:
+        raise HTTPException(
+            status_code=403,
+            detail="Please verify your email before logging in"
+        )
 
     access_token = create_access_token({"user_id": user.id})
 
@@ -72,7 +139,7 @@ def login_user(login_user: LoginUser, response: Response, db: Session = Depends(
 
 # POST /logout -> Log out and return to home page
 @router.post("/logout")
-def logout_user(response: Response):
+async def logout_user(response: Response):
     
     response.delete_cookie(key="access_token")
     return {"message": "Logged out successfully"}

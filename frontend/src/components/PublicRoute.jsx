@@ -1,8 +1,8 @@
 import { Navigate } from "react-router-dom";
 
-export function PublicRoute({ currentUser, loading, children }) {
+export function PublicRoute({ currentUser, authChecked, children }) {
 
-  if (!loading) return null
+  if (!authChecked) return null
 
   if (currentUser) {
     if (currentUser.role === "admin") {

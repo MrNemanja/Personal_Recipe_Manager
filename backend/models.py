@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import JSON
 from database import Base
@@ -28,6 +28,9 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     email = Column(String, index=True, unique=True, nullable=False)
     role = Column(String, nullable=False)
+    is_verified = Column(Boolean, default=False)
+    verification_token = Column(String, nullable=True)
+    verification_token_expires_at = Column(DateTime, nullable=True)
 
     # favorite_recipe_id is a foreign key to Recipe
     favorite_recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=True)

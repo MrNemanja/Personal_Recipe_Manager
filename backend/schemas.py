@@ -37,6 +37,12 @@ class CreateUser(BaseModel):
     email: EmailStr
     role: str = Field(..., description="Role")
 
+class VerifyEmail(BaseModel):
+    token: str
+
+class ResendEmail(BaseModel):
+    email: EmailStr
+
 class LoginUser(BaseModel):
     username: str
     password: str

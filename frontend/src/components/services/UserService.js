@@ -1,6 +1,7 @@
 import { api } from "./api";
 
 export async function getCurrentUser() {
+    
     const response = await api.get("/users/me")
     return response.data
 }
@@ -12,6 +13,19 @@ export async function RegisterUser(formData) {
     return response.data
 
 }
+
+export async function VeifyUserEmail(token) {
+    
+    const response = await api.post("/users/verify-email", token)
+    return response.data
+}
+
+export async function ResendVerificationEmail(email) {
+
+    const response = await api.post("/users/resend-verification", email)
+    return response.data
+}
+
 export async function LoginUser(formData) {
     
     const response = await api.post("/users/login", formData)

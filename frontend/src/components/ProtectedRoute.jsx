@@ -1,8 +1,8 @@
 import { Navigate } from "react-router-dom";
 
-export function ProtectedRoute({ currentUser, loading, requiredRole, children }) {
+export function ProtectedRoute({ currentUser, authChecked, requiredRole, children }) {
 
-  if (!loading) return null
+  if (!authChecked) return null
 
   if (!currentUser) {
     return <Navigate to="/login" replace />

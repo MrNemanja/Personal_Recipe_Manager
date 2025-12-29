@@ -1,7 +1,8 @@
+import './App.css'
+import 'react-toastify/dist/ReactToastify.css'
 import {BrowserRouter as Router, Route, Routes} from "react-router-dom"
 import { useState, useEffect } from "react"
 import { getCurrentUser } from "./components/services/UserService"
-import './App.css'
 import Header from './components/Header/Header'
 import Home from './components/Home/Home'
 import About from './components/About/About'
@@ -10,13 +11,17 @@ import Register from './components/Register/Register'
 import Dashboard from './components/Dashboard/Dashboard'
 import AdminDashboard from "./components/AdminDashboard/AdminDashboard"
 import Footer from './components/Footer/Footer'
+import VerifyEmail from './components/VerifyEmail/VerifyEmail'
+import ResendVerification from './components/ResendVerification/ResendVerification'
 import { ProtectedRoute } from "./components/ProtectedRoute"
 import { PublicRoute } from "./components/PublicRoute"
+import { ToastContainer } from "react-toastify";
+
 
 function App() {
 
   const [currentUser, setCurrentUser] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
 
   useEffect(() => {
         
@@ -31,7 +36,7 @@ function App() {
             setCurrentUser(null)
         }
         finally{
-            setLoading(true)
+            setAuthChecked(true)
         }
     }
     fetchUser()
@@ -48,30 +53,43 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/login" element={
-              <PublicRoute currentUser={currentUser} loading={loading}>
+              <PublicRoute currentUser={currentUser} authChecked={authChecked}>
               <LogIn setCurrentUser={setCurrentUser} />
               </PublicRoute>
               } />
             <Route path="/register" element={
-              <PublicRoute currentUser={currentUser} loading={loading}>
+              <PublicRoute currentUser={currentUser} authChecked={authChecked}>
               <Register />
               </PublicRoute>
               } />
             <Route path="/dashboard" element={
-              <ProtectedRoute currentUser={currentUser} loading={loading} requiredRole={"regularUser"}>
+              <ProtectedRoute currentUser={currentUser} authChecked={authChecked} requiredRole={"regularUser"}>
               <Dashboard currentUser={currentUser} />
               </ProtectedRoute>
               } />  
             <Route path="/adminDashboard" element={
-              <ProtectedRoute currentUser={currentUser} loading={loading} requiredRole={"admin"}>
+              <ProtectedRoute currentUser={currentUser} authChecked={authChecked} requiredRole={"admin"}>
               <AdminDashboard currentUser={currentUser} />
               </ProtectedRoute>
-              } />  
+              } />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/resend-verification" element={<ResendVerification />} />    
           </Routes>  
         </main>
         <Footer />
       </div>
     </Router>
+    <ToastContainer 
+      position="top-right"
+      autoClose={3000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+    />
     </>
   )
 }

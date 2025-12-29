@@ -5,12 +5,9 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User
-from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
-
-load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
@@ -38,21 +35,22 @@ def verify_access_token(token: str):
 
 def get_current_user_optional(access_token: Optional[str] = Cookie(None), db: Session = Depends(get_db)) -> Optional[User]:
     
-    print("Cookie token:", access_token)
     if not access_token:
         return None
 
     if access_token.startswith("Bearer "):
         access_token = access_token[len("Bearer "):]
-    print("Token after Bearer cut:", access_token)
 
     user_id = verify_access_token(access_token)
-    print("Decoded user_id:", user_id)
+
     if not user_id:
         return None
 
     user = db.query(User).filter(User.id == user_id).first()
-    print("Fetched user:", user)
+
+    if not user or not user.is_verified:
+        return None
+
     return user
 
 def get_current_user(access_token: Optional[str] = Cookie(None), db: Session = Depends(get_db)):
