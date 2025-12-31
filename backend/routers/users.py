@@ -51,7 +51,7 @@ async def register_user(user: CreateUser, db: Session = Depends(get_db)):
         role=user.role,
         is_verified=False,
         verification_token=token, 
-        verification_token_expires_at = datetime.utcnow() + timedelta(minutes=1),
+        verification_token_expires_at = datetime.utcnow() + timedelta(minutes=30),
         reset_password_token=None,
         reset_password_token_expires_at = None,
         favorite_recipe_id=None
@@ -99,7 +99,7 @@ async def resend_verification(email: ResendEmail, db: Session = Depends(get_db))
 
     new_token = secrets.token_urlsafe(32)
     user.verification_token = new_token
-    user.verification_token_expires_at = datetime.utcnow() + timedelta(minutes=1)
+    user.verification_token_expires_at = datetime.utcnow() + timedelta(minutes=30)
     
     db.commit()
 
@@ -148,7 +148,7 @@ async def forgot_password(email: ForgotPasswordRequest, db: Session = Depends(ge
     if user and user.is_verified:
         token = secrets.token_urlsafe(32)
         user.reset_password_token = token
-        user.reset_password_token_expires_at = datetime.utcnow() + timedelta(minutes=15)
+        user.reset_password_token_expires_at = datetime.utcnow() + timedelta(minutes=30)
         db.commit()
 
         await send_reset_password_email(user.email, token)
