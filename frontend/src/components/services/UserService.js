@@ -6,12 +6,10 @@ export async function getCurrentUser() {
     return response.data
 }
 
-
 export async function RegisterUser(formData) {
 
     const response = await api.post("/users/register", formData)
     return response.data
-
 }
 
 export async function VeifyUserEmail(token) {
@@ -29,6 +27,18 @@ export async function ResendVerificationEmail(email) {
 export async function LoginUser(formData) {
     
     const response = await api.post("/users/login", formData)
+    return response.data
+}
+
+export async function requestPasswordReset(email) {
+    
+    const response = await api.post("/users/forgot-password", email)
+    return response.data
+}
+
+export async function resetPassword(data) {
+    
+    const response = await api.post("/users/reset-password", data)
     return response.data
 }
 

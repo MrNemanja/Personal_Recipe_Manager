@@ -31,6 +31,8 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     verification_token = Column(String, nullable=True)
     verification_token_expires_at = Column(DateTime, nullable=True)
+    reset_password_token = Column(String, nullable=True)
+    reset_password_token_expires_at = Column(DateTime, nullable=True)
 
     # favorite_recipe_id is a foreign key to Recipe
     favorite_recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=True)

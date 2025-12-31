@@ -54,7 +54,9 @@ function LogIn({setCurrentUser}) {
 
                 <button type="submit" className="login-btn">Log In</button>
             </form>
-
+            <p className="redirect">
+                <a href="/forgot-password">Forgot your password?</a>
+            </p>
             <p className="register-text">
                 Don't have an account? <a href="/register">Register</a>
             </p>

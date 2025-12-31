@@ -13,6 +13,8 @@ import AdminDashboard from "./components/AdminDashboard/AdminDashboard"
 import Footer from './components/Footer/Footer'
 import VerifyEmail from './components/VerifyEmail/VerifyEmail'
 import ResendVerification from './components/ResendVerification/ResendVerification'
+import ForgotPassword from './components/ForgotPassword/ForgotPassword'
+import ResetPassword from './components/ResetPassword/ResetPassword'
 import { ProtectedRoute } from "./components/ProtectedRoute"
 import { PublicRoute } from "./components/PublicRoute"
 import { ToastContainer } from "react-toastify";
@@ -73,7 +75,9 @@ function App() {
               </ProtectedRoute>
               } />
             <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/resend-verification" element={<ResendVerification />} />    
+            <Route path="/resend-verification" element={<ResendVerification />} />
+            <Route path='/forgot-password' element={<ForgotPassword />} />
+            <Route path='/reset-password' element={<ResetPassword />} />    
           </Routes>  
         </main>
         <Footer />

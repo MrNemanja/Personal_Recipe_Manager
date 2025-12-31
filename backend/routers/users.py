@@ -2,10 +2,10 @@ from fastapi import APIRouter, Path, HTTPException, Depends, Response
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User, Recipe
-from schemas import CreateUser, UserResponse, RecipeResponse, LoginUser, VerifyEmail, ResendEmail
+from schemas import CreateUser, UserResponse, RecipeResponse, LoginUser, VerifyEmail, ResendEmail, ForgotPasswordRequest, ResetPasswordRequest
 from passlib.context import CryptContext
 from auth import create_access_token, get_current_user, get_current_user_optional
-from services.email_service import send_verification_email
+from services.email_service import send_verification_email, send_reset_password_email
 from typing import Optional
 from datetime import datetime, timedelta
 import secrets
@@ -52,6 +52,8 @@ async def register_user(user: CreateUser, db: Session = Depends(get_db)):
         is_verified=False,
         verification_token=token, 
         verification_token_expires_at = datetime.utcnow() + timedelta(minutes=1),
+        reset_password_token=None,
+        reset_password_token_expires_at = None,
         favorite_recipe_id=None
         )
 
@@ -136,6 +138,47 @@ async def login_user(login_user: LoginUser, response: Response, db: Session = De
     )
 
     return {"message": "Login successful"}
+
+#POST /forgot-password -> Send a forgot password form link to user email
+@router.post("/forgot-password")
+async def forgot_password(email: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    
+    user = db.query(User).filter(User.email == email.email).first()
+
+    if user and user.is_verified:
+        token = secrets.token_urlsafe(32)
+        user.reset_password_token = token
+        user.reset_password_token_expires_at = datetime.utcnow() + timedelta(minutes=15)
+        db.commit()
+
+        await send_reset_password_email(user.email, token)
+
+    return {
+        "message": "If the account exists, a password reset email has been sent."
+    }
+
+#POST /reset-password -> Reset your password
+@router.post("/reset-password")
+async def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    
+    user = db.query(User).filter(
+        User.reset_password_token == data.token
+    ).first()
+
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+
+    if user.reset_password_token_expires_at < datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Reset token has expired")
+
+    user.password_hash = pwd_context.hash(data.new_password)
+
+    user.reset_password_token = None
+    user.reset_password_token_expires_at = None
+
+    db.commit()
+
+    return {"message": "Password has been successfully reset"}
 
 # POST /logout -> Log out and return to home page
 @router.post("/logout")
