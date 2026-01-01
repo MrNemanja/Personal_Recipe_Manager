@@ -2,15 +2,16 @@ import './LogIn.css'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LoginUser, getCurrentUser } from '../services/UserService'
+import { useAuth } from '../AuthContext'
 
-function LogIn({setCurrentUser}) {
+function LogIn() {
      
     const [formData, setFormData] = useState({
         username: "",
         password: ""
     })
     const navigate = useNavigate()
-
+    const { setCurrentUser } = useAuth()
     
     const handleInput = (e) => {
         setFormData({

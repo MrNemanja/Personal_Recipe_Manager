@@ -1,6 +1,9 @@
 import { Navigate } from "react-router-dom";
+import { useAuth } from "./AuthContext";
 
-export function ProtectedRoute({ currentUser, authChecked, requiredRole, children }) {
+function ProtectedRoute({ requiredRole, children }) {
+
+  const {currentUser, authChecked} = useAuth()
 
   if (!authChecked) return null
 
@@ -14,3 +17,4 @@ export function ProtectedRoute({ currentUser, authChecked, requiredRole, childre
 
   return children
 }
+export default ProtectedRoute

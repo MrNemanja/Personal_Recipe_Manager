@@ -1,9 +1,11 @@
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "../AuthContext"
 
-function Dashboard({currentUser}) {
+function Dashboard() {
 
     const navigate = useNavigate()
+    const { currentUser } = useAuth()
     
     useEffect(() => {
                 

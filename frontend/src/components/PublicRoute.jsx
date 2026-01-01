@@ -1,6 +1,9 @@
 import { Navigate } from "react-router-dom";
+import { useAuth } from "./AuthContext";
 
-export function PublicRoute({ currentUser, authChecked, children }) {
+function PublicRoute({ children }) {
+
+  const {currentUser, authChecked} = useAuth()
 
   if (!authChecked) return null
 
@@ -13,3 +16,4 @@ export function PublicRoute({ currentUser, authChecked, children }) {
 
   return children
 }
+export default PublicRoute

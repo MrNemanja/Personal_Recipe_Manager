@@ -1,10 +1,12 @@
+import './Header.css'
 import { Link, useNavigate } from "react-router-dom"
 import { LogoutUser } from "../services/UserService"
-import './Header.css'
+import { useAuth } from '../AuthContext'
 
-function Header({currentUser, setCurrentUser}) {
+function Header() {
 
     const navigate = useNavigate()
+    const {currentUser, setCurrentUser} = useAuth()
 
     const handleLogOut = async () => {
          

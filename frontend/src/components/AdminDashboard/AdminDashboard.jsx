@@ -1,10 +1,12 @@
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "../AuthContext"
 
-function AdminDashboard({currentUser}) {
+function AdminDashboard() {
 
     const navigate = useNavigate()
-
+    const { currentUser } = useAuth()
+    
     useEffect(() => {
             
         if (currentUser) {

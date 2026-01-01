@@ -1,8 +1,6 @@
 import './App.css'
 import 'react-toastify/dist/ReactToastify.css'
 import {BrowserRouter as Router, Route, Routes} from "react-router-dom"
-import { useState, useEffect } from "react"
-import { getCurrentUser } from "./components/services/UserService"
 import Header from './components/Header/Header'
 import Home from './components/Home/Home'
 import About from './components/About/About'
@@ -15,63 +13,41 @@ import VerifyEmail from './components/VerifyEmail/VerifyEmail'
 import ResendVerification from './components/ResendVerification/ResendVerification'
 import ForgotPassword from './components/ForgotPassword/ForgotPassword'
 import ResetPassword from './components/ResetPassword/ResetPassword'
-import { ProtectedRoute } from "./components/ProtectedRoute"
-import { PublicRoute } from "./components/PublicRoute"
+import ProtectedRoute from "./components/ProtectedRoute"
+import PublicRoute from "./components/PublicRoute"
 import { ToastContainer } from "react-toastify";
 
 
 function App() {
 
-  const [currentUser, setCurrentUser] = useState(null)
-  const [authChecked, setAuthChecked] = useState(false)
-
-  useEffect(() => {
-        
-    const fetchUser = async () => {
-        
-        try{
-          
-          const response = await getCurrentUser();
-          setCurrentUser(response)
-      
-        }catch(error) {
-            setCurrentUser(null)
-        }
-        finally{
-            setAuthChecked(true)
-        }
-    }
-    fetchUser()
-      
-  },[])
 
   return (
     <>
     <Router>
       <div className="app-container">
-        <Header currentUser={currentUser} setCurrentUser={setCurrentUser}/>
+        <Header />
         <main className="main-content">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/login" element={
-              <PublicRoute currentUser={currentUser} authChecked={authChecked}>
-              <LogIn setCurrentUser={setCurrentUser} />
+              <PublicRoute>
+                <LogIn />
               </PublicRoute>
               } />
             <Route path="/register" element={
-              <PublicRoute currentUser={currentUser} authChecked={authChecked}>
-              <Register />
+              <PublicRoute>
+                <Register />
               </PublicRoute>
               } />
             <Route path="/dashboard" element={
-              <ProtectedRoute currentUser={currentUser} authChecked={authChecked} requiredRole={"regularUser"}>
-              <Dashboard currentUser={currentUser} />
+              <ProtectedRoute requiredRole={"regularUser"}>
+                <Dashboard />
               </ProtectedRoute>
               } />  
             <Route path="/adminDashboard" element={
-              <ProtectedRoute currentUser={currentUser} authChecked={authChecked} requiredRole={"admin"}>
-              <AdminDashboard currentUser={currentUser} />
+              <ProtectedRoute requiredRole={"admin"}>
+                <AdminDashboard />
               </ProtectedRoute>
               } />
             <Route path="/verify-email" element={<VerifyEmail />} />
