@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Path, HTTPException, Depends, Response
+from fastapi import APIRouter, Path, HTTPException, Depends, Cookie
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
-from models import User, Recipe
+from models import User, Recipe, RefreshToken
 from schemas import CreateUser, UserResponse, RecipeResponse, LoginUser, VerifyEmail, ResendEmail, ForgotPasswordRequest, ResetPasswordRequest
 from passlib.context import CryptContext
-from auth import create_access_token, get_current_user, get_current_user_optional
+from auth import create_access_token, create_refresh_token, delete_expired_refresh_tokens, get_current_user_optional
 from services.email_service import send_verification_email, send_reset_password_email
 from typing import Optional
 from datetime import datetime, timedelta
@@ -22,6 +23,9 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # GET -> get current user
 @router.get("/me", response_model=Optional[UserResponse])
 def get_me(current_user: Optional[User] = Depends(get_current_user_optional)):
+
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
 
     return current_user
 
@@ -112,7 +116,7 @@ async def resend_verification(email: ResendEmail, db: Session = Depends(get_db))
 
 # POST /login -> Log in into your account
 @router.post("/login")
-async def login_user(login_user: LoginUser, response: Response, db: Session = Depends(get_db)):
+async def login_user(login_user: LoginUser, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == login_user.username).first()
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
@@ -127,7 +131,9 @@ async def login_user(login_user: LoginUser, response: Response, db: Session = De
         )
 
     access_token = create_access_token({"user_id": user.id})
+    refresh_token = create_refresh_token(user, db)
 
+    response = JSONResponse(content={"message": "Login successful"})
     response.set_cookie(
         key="access_token",
         value=f"Bearer {access_token}",
@@ -137,7 +143,57 @@ async def login_user(login_user: LoginUser, response: Response, db: Session = De
         max_age=1800
     )
 
-    return {"message": "Login successful"}
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=604800
+    )
+
+    return response
+
+#POST /refresh -> Create new access token using refresh token
+@router.post("/refresh")
+async def refresh_token_endpoint(refresh_token: str = Cookie(None), db: Session = Depends(get_db)):
+
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Refresh token missing")
+
+    delete_expired_refresh_tokens(db)
+
+    token_obj = db.query(RefreshToken).filter(RefreshToken.token == refresh_token).first()
+    if not token_obj or token_obj.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+
+    user = token_obj.user
+
+    # Rotate refresh token for security
+    db.delete(token_obj)
+    db.commit()
+    new_refresh_token = create_refresh_token(user, db)
+
+    access_token = create_access_token({"user_id": token_obj.user_id})
+
+    response = JSONResponse(content={"message": "Access token refreshed"})
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=1800
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=new_refresh_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=604800
+    )
+    return response
 
 #POST /forgot-password -> Send a forgot password form link to user email
 @router.post("/forgot-password")
@@ -182,10 +238,18 @@ async def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_d
 
 # POST /logout -> Log out and return to home page
 @router.post("/logout")
-async def logout_user(response: Response):
-    
+def logout_user(refresh_token: str = Cookie(None), db: Session = Depends(get_db)):
+
+    if refresh_token:
+        token_obj = db.query(RefreshToken).filter(RefreshToken.token == refresh_token).first()
+        if token_obj:
+            db.delete(token_obj)
+            db.commit()
+
+    response = JSONResponse(content={"message": "Logged out successfully"})
     response.delete_cookie(key="access_token")
-    return {"message": "Logged out successfully"}
+    response.delete_cookie(key="refresh_token")
+    return response
 
 # GET /{user_id}/favorite -> get user's favorite recipe
 @router.get("/{user_id}/favorite", response_model=RecipeResponse)

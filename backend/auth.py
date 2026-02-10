@@ -1,19 +1,18 @@
 import os
 from fastapi import Depends, HTTPException
 from fastapi import Cookie
-from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from database import get_db
-from models import User
+from models import User, RefreshToken
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
+import secrets
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
+REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7))
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
@@ -32,6 +31,29 @@ def verify_access_token(token: str):
             return user_id
     except JWTError:
         return None
+
+def create_refresh_token(user: User, db: Session):
+
+    token_str = secrets.token_urlsafe(32)
+    expires_at = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+
+    refresh_token = RefreshToken(
+        user_id = user.id,
+        token=token_str,
+        expires_at=expires_at
+    )
+
+    db.add(refresh_token)
+    db.commit()
+    db.refresh(refresh_token)
+
+    return token_str
+
+def delete_expired_refresh_tokens(db: Session):
+
+    db.query(RefreshToken).filter(RefreshToken.expires_at < datetime.utcnow()).delete()
+    db.commit()
+
 
 def get_current_user_optional(access_token: Optional[str] = Cookie(None), db: Session = Depends(get_db)) -> Optional[User]:
     

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { getCurrentUser } from "./services/UserService";
+import { getCurrentUser, RefreshAccessToken } from "./services/UserService";
 import { Children } from "react";
 
 const AuthContext = createContext()
@@ -15,7 +15,19 @@ export const AuthProvider = ({children}) => {
         const response = await getCurrentUser()
         setCurrentUser(response)
       } catch (error) {
-        setCurrentUser(null)
+          if(error.response && error.response.status === 401) {
+            try {
+              await RefreshAccessToken()
+              const response = await getCurrentUser()
+              setCurrentUser(response)
+            }
+            catch(error) {
+              setCurrentUser(null)
+            }
+          }
+          else {
+            setCurrentUser(null)
+          }
       } finally {
         setAuthChecked(true)
       }

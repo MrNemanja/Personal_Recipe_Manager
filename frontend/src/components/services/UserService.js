@@ -30,6 +30,11 @@ export async function LoginUser(formData) {
     return response.data
 }
 
+export async function RefreshAccessToken() {
+    
+    await api.post("/users/refresh")
+}
+
 export async function requestPasswordReset(email) {
     
     const response = await api.post("/users/forgot-password", email)

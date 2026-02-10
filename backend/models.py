@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import JSON
+from datetime import datetime
 from database import Base
 
 # Recipe model: stores recipe details
@@ -39,6 +40,18 @@ class User(Base):
 
     # favorite_recipe relationship allows easy access to user's favorite recipe
     favorite_recipe = relationship("Recipe", back_populates="favorited_by", foreign_keys=[favorite_recipe_id])
-    owned_recipes = relationship("Recipe", back_populates="recipe_owner", foreign_keys="[Recipe.owner_id]")
+    owned_recipes = relationship("Recipe", back_populates="recipe_owner", foreign_keys=[Recipe.owner_id])
 
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
+
+# Refresh token model - store refresh token details
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    token = Column(String, unique=True, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="refresh_tokens")
 
