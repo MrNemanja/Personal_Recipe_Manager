@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, HTTPException, Depends, Cookie
+from fastapi import APIRouter, Path, HTTPException, Depends, Cookie, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
@@ -7,6 +7,7 @@ from schemas import CreateUser, UserResponse, RecipeResponse, LoginUser, VerifyE
 from passlib.context import CryptContext
 from auth import create_access_token, create_refresh_token, delete_expired_refresh_tokens, get_current_user_optional
 from services.email_service import send_verification_email, send_reset_password_email
+from services.brute_force import check_login_limits, reset_login_attempts
 from typing import Optional
 from datetime import datetime, timedelta
 import secrets
@@ -18,7 +19,6 @@ router = APIRouter(
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 # GET -> get current user
 @router.get("/me", response_model=Optional[UserResponse])
@@ -116,7 +116,13 @@ async def resend_verification(email: ResendEmail, db: Session = Depends(get_db))
 
 # POST /login -> Log in into your account
 @router.post("/login")
-async def login_user(login_user: LoginUser, db: Session = Depends(get_db)):
+async def login_user(login_user: LoginUser, request: Request, db: Session = Depends(get_db)):
+
+    ip = request.client.host
+
+    #Brute force check
+    check_login_limits(login_user.username, ip)
+
     user = db.query(User).filter(User.username == login_user.username).first()
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
@@ -129,6 +135,8 @@ async def login_user(login_user: LoginUser, db: Session = Depends(get_db)):
             status_code=403,
             detail="Please verify your email before logging in"
         )
+
+    reset_login_attempts(login_user.username)
 
     access_token = create_access_token({"user_id": user.id})
     refresh_token = create_refresh_token(user, db)
