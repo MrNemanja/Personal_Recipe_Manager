@@ -10,27 +10,27 @@ from jose import JWTError, jwt
 import secrets
 
 SECRET_KEY = os.getenv("SECRET_KEY")
+MFA_SECRET_KEY = os.getenv("MFA_SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+MFA_TOKEN_EXPIRE_MINUTES = int(os.getenv("MFA_TOKEN_EXPIRE_MINUTES", 5))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7))
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+
     to_encode = data.copy()
     expire_time = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire_time})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-def verify_access_token(token: str):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: int = payload.get("user_id")
-        if user_id is None:
-            return None
-        else:
-            return user_id
-    except JWTError:
-        return None
+def create_mfa_token(data: dict, expires_delta: Optional[timedelta] = None):
+
+    to_encode = data.copy()
+    expire_time = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=MFA_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire_time})
+    encoded_jwt = jwt.encode(to_encode, MFA_SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 def create_refresh_token(user: User, db: Session):
 
@@ -48,6 +48,36 @@ def create_refresh_token(user: User, db: Session):
     db.refresh(refresh_token)
 
     return token_str
+
+def verify_access_token(token: str):
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+        if payload.get("type") != "access":
+            return None
+
+        return payload.get("user_id")
+
+    except JWTError:
+        return None
+
+def verify_mfa_token(token: str):
+
+    try:
+        payload = jwt.decode(token, MFA_SECRET_KEY, algorithms=[ALGORITHM])
+
+        if payload.get("type") != "mfa":
+            return None
+
+        if not payload.get("mfa_pending"):
+            return None
+
+        return payload.get("user_id")
+
+    except JWTError:
+        return None
+
 
 def delete_expired_refresh_tokens(db: Session):
 
@@ -90,4 +120,5 @@ def get_current_user(access_token: Optional[str] = Cookie(None), db: Session = D
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
     return user

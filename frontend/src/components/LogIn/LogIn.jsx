@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LoginUser, getCurrentUser } from '../services/UserService'
 import { useAuth } from '../AuthContext'
+import MfaModal from '../MFA/MfaModal'
 
 function LogIn() {
      
@@ -10,6 +11,8 @@ function LogIn() {
         username: "",
         password: ""
     })
+    const [showMfa, setShowMfa] = useState(false)
+    const [mfaToken, setMfaToken] = useState(null)
     const navigate = useNavigate()
     const { setCurrentUser } = useAuth()
     
@@ -25,7 +28,14 @@ function LogIn() {
         e.preventDefault()
         try{
 
-            await LoginUser(formData)
+            const response = await LoginUser(formData)
+
+            if(response.mfa_required) {
+                setMfaToken(response.mfa_token);
+                setShowMfa(true);
+                return;
+            }
+
             const user = await getCurrentUser()
             setCurrentUser(user)
             if (user.role === "admin") navigate("/adminDashboard")
@@ -61,6 +71,14 @@ function LogIn() {
             <p className="register-text">
                 Don't have an account? <a href="/register">Register</a>
             </p>
+
+            {showMfa && <MfaModal mfaToken = {mfaToken} mode='login' onSuccess={
+                async () => {
+                     const user = await getCurrentUser()
+                     setCurrentUser(user)
+                     if (user.role === "admin") navigate("/adminDashboard")
+                     else navigate("/dashboard")
+                }} />}
         </div>
     )
 }

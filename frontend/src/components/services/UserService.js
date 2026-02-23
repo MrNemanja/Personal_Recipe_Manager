@@ -30,6 +30,26 @@ export async function LoginUser(formData) {
     return response.data
 }
 
+export async function SetupMfa() {
+    
+    const response = await api.post("/users/mfa/setup",
+         { responseType: 'blob' })
+
+    return response.data
+}
+
+export async function VerifyMfaSetup(code) {
+    
+    const response = await api.post("/users/mfa/verify-setup", code)
+    return response.data
+}
+
+export async function VerifyMfaLogin(data) {
+
+    const response = await api.post("/users/mfa/verify-login", data)
+    return response.data
+}
+
 export async function RefreshAccessToken() {
     
     await api.post("/users/refresh")
