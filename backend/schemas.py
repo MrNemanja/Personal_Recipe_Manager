@@ -30,12 +30,6 @@ class RecipeResponse(BaseModel):
     class Config:
         from_attributes = True
 
-# CreateUser: request model for registering a user
-class CreateUser(BaseModel):
-    username: str = Field(...,min_length=3, description="Username")
-    password: str = Field(...,min_length=6, description="Password")
-    email: EmailStr
-    role: str = Field(..., description="Role")
 
 class VerifyEmail(BaseModel):
     token: str

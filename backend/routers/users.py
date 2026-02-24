@@ -1,21 +1,22 @@
-from fastapi import APIRouter, Path, HTTPException, Depends, Cookie, Request
+from fastapi import APIRouter, Path, HTTPException, Depends, Cookie, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse, StreamingResponse
+from pydantic import EmailStr
 from sqlalchemy.orm import Session
 from database import get_db
-from models import User, Recipe, RefreshToken
-from schemas import CreateUser, UserResponse, RecipeResponse, LoginUser, VerifyEmail, ResendEmail, ForgotPasswordRequest, ResetPasswordRequest, MfaSetupRequest, MfaVerifyRequest
+from models import User, UserRole, Recipe, RefreshToken
+from schemas import UserResponse, RecipeResponse, LoginUser, VerifyEmail, ResendEmail, ForgotPasswordRequest, ResetPasswordRequest, MfaSetupRequest, MfaVerifyRequest
 from passlib.context import CryptContext
 from auth import create_access_token, create_refresh_token, create_mfa_token, verify_mfa_token, delete_expired_refresh_tokens, get_current_user_optional, get_current_user
 from services.email_service import send_verification_email, send_reset_password_email
 from services.brute_force import check_login_limits, reset_login_attempts
+from services.file_service import save_profile_image
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import secrets
 import pyotp
 import qrcode
 import io
 import os
-from jose import jwt
 
 # Routes for managing users and their favorite recipes
 router = APIRouter(
@@ -49,18 +50,32 @@ def get_user(id: int = Path(description="The ID of the user you want to view", g
 
 # POST /register -> create a new user with hashed password
 @router.post("/register")
-async def register_user(user: CreateUser, db: Session = Depends(get_db)):
-    if db.query(User).filter((User.username == user.username) | (User.email == user.email)).first():
+async def register_user(username: str = Form(..., min_length=3), email: EmailStr = Form(...),
+                        password: str = Form(..., min_length=6),
+                        full_name: str = Form(None, max_length=100), phone: str = Form(None, max_length=50),
+                        city: str = Form(None, max_length=50), country: str = Form(None, max_length=50),
+                        dob: date = Form(None), profile_image: UploadFile = File(None), db: Session = Depends(get_db)):
+
+    if db.query(User).filter((User.username == username) | (User.email == email)).first():
         raise HTTPException(status_code=400, detail="User already exists")
 
-    hashed_password = pwd_context.hash(user.password)
+    hashed_password = pwd_context.hash(password)
+
+    profile_image_path = save_profile_image(profile_image) if profile_image else None
+
     token = secrets.token_urlsafe(32)
 
     new_user = User(
-        username=user.username, 
+        username=username,
         password_hash=hashed_password, 
-        email=user.email, 
-        role=user.role,
+        email=email,
+        role=UserRole.USER,
+        full_name=full_name,
+        phone=phone,
+        city=city,
+        country=country,
+        dob=dob,
+        profile_image=profile_image_path,
         is_verified=False,
         verification_token=token, 
         verification_token_expires_at = datetime.utcnow() + timedelta(minutes=30),

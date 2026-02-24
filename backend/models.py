@@ -1,8 +1,9 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import JSON
 from datetime import datetime
 from database import Base
+import enum
 
 # Recipe model: stores recipe details
 class Recipe(Base):
@@ -21,6 +22,12 @@ class Recipe(Base):
     # favorited_by establishes a many-to-one relationship with User
     favorited_by = relationship("User", back_populates="favorite_recipe", foreign_keys="[User.favorite_recipe_id]")
 
+# Role types
+class UserRole(enum.Enum):
+    USER = "user"
+    ADMIN = "admin"
+
+
 # User model: stores user details
 class User(Base):
     __tablename__ = "users"
@@ -28,7 +35,13 @@ class User(Base):
     username = Column(String, index=True, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
     email = Column(String, index=True, unique=True, nullable=False)
-    role = Column(String, nullable=False)
+    role = Column(Enum(UserRole), nullable=False)
+    full_name = Column(String, nullable=True)
+    phone = Column(String, nullable=True)
+    city = Column(String, nullable=True)
+    country = Column(String, nullable=True)
+    dob = Column(Date, nullable=True)
+    profile_image = Column(String, nullable=True)
     is_verified = Column(Boolean, default=False)
     verification_token = Column(String, nullable=True)
     verification_token_expires_at = Column(DateTime, nullable=True)

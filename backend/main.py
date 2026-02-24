@@ -27,7 +27,7 @@ app.add_middleware(
 # Include routers for recipes and users
 app.include_router(recipes_router)
 app.include_router(users_router)
-app.mount("/images", StaticFiles(directory="images"), name="images")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 
