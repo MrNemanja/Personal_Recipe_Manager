@@ -5,6 +5,7 @@ from routers.users import router as users_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from seed import seed_admin
+from pathlib import Path
 
 # Create all tables in the database if they do not exist
 Base.metadata.create_all(bind=engine)
@@ -27,6 +28,7 @@ app.add_middleware(
 # Include routers for recipes and users
 app.include_router(recipes_router)
 app.include_router(users_router)
+Path("uploads/profiles").mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 

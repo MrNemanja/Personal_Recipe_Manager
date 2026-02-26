@@ -1,3 +1,6 @@
+from datetime import date
+
+from fastapi import Form
 from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, List
 
@@ -30,6 +33,31 @@ class RecipeResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class CreateUser(BaseModel):
+    username: str = Field(..., min_length=3, description="Username")
+    email: EmailStr = Field(..., description="Email address")
+    password: str = Field(..., min_length=6, description="Password")
+    full_name: Optional[str] = Field(None, max_length=100, description="Full name of the user")
+    phone : Optional[str] = Field(None, max_length=50, description="Phone number of the user")
+    city: Optional[str] = Field(None, max_length=50, description="City of the user")
+    country: Optional[str] = Field(None, max_length=50, description="Country of the user")
+    dob: Optional[date] = Field(None, description="Date of birth of the user")
+
+    @classmethod
+    def as_form(cls, username: str = Form(), email: EmailStr = Form(), password: str = Form(),
+                full_name: str = Form(None), phone: str = Form(None), city: str = Form(None),
+                country: str = Form(None), dob: date = Form(None)):
+
+        return cls(
+            username=username,
+            email=email,
+            password=password,
+            full_name=full_name,
+            phone=phone,
+            city=city,
+            country=country,
+            dob=dob
+        )
 
 class VerifyEmail(BaseModel):
     token: str

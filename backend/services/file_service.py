@@ -21,8 +21,6 @@ def save_profile_image(profile_image: UploadFile) -> str:
     if file_size > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="File too large")
 
-    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
     filename = f"user_{secrets.token_hex(8)}.{ext}"
     file_path = UPLOAD_DIR / filename
 
