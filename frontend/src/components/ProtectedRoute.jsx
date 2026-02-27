@@ -12,7 +12,9 @@ function ProtectedRoute({ requiredRole, children }) {
   }
 
   if (requiredRole && currentUser.role !== requiredRole) {
-    return <Navigate to="/" replace />
+    if (currentUser.role === "admin") return <Navigate to="/adminDashboard" replace />;
+    else if (currentUser.role === "user") return <Navigate to="/dashboard" replace />;
+    else return <Navigate to="/" replace />;
   }
 
   return children

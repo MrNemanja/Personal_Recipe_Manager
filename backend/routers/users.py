@@ -4,7 +4,7 @@ from pydantic import EmailStr
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User, UserRole, Recipe, RefreshToken
-from schemas import CreateUser, UserResponse, RecipeResponse, LoginUser, VerifyEmail, ResendEmail, ForgotPasswordRequest, ResetPasswordRequest, MfaSetupRequest, MfaVerifyRequest
+from schemas import CreateUser, UserResponse, UserProfileResponse, RecipeResponse, LoginUser, VerifyEmail, ResendEmail, ForgotPasswordRequest, ResetPasswordRequest, MfaSetupRequest, MfaVerifyRequest
 from passlib.context import CryptContext
 from auth import create_access_token, create_refresh_token, create_mfa_token, verify_mfa_token, delete_expired_refresh_tokens, get_current_user_optional, get_current_user
 from services.email_service import send_verification_email, send_reset_password_email
@@ -37,16 +37,6 @@ def get_me(current_user: Optional[User] = Depends(get_current_user_optional)):
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     return current_user
-
-# GET /{id} -> get user by ID
-@router.get("/{id}", response_model=UserResponse)
-def get_user(id: int = Path(description="The ID of the user you want to view", gt=0), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == id).first()
-
-    if user:
-        return user
-    else:
-        raise HTTPException(status_code=404, detail="User not found")
 
 # POST /register -> create a new user with hashed password
 @router.post("/register")
@@ -361,6 +351,11 @@ async def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_d
     db.commit()
 
     return {"message": "Password has been successfully reset"}
+
+# GET /profile -> Get user profile info
+@router.get("/profile", response_model=UserProfileResponse)
+def get_user_profile(current_user: User = Depends(get_current_user)):
+    return current_user
 
 # POST /logout -> Log out and return to home page
 @router.post("/logout")

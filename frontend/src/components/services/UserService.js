@@ -67,6 +67,12 @@ export async function resetPassword(data) {
     return response.data
 }
 
+export async function getUserProfile() {
+    
+    const response = await api.get("/users/profile")
+    return response.data
+}
+
 export async function LogoutUser() {
     
     const response = await api.post("/users/logout")

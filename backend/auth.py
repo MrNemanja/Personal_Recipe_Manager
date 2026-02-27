@@ -121,4 +121,7 @@ def get_current_user(access_token: Optional[str] = Cookie(None), db: Session = D
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    if not user.is_verified:
+        raise HTTPException(status_code=403, detail="Account not verified")
+
     return user

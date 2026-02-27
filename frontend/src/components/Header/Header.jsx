@@ -7,6 +7,7 @@ function Header() {
 
     const navigate = useNavigate()
     const {currentUser, setCurrentUser} = useAuth()
+    const baseURL = import.meta.env.VITE_API_URL
 
     const handleLogOut = async () => {
          
@@ -27,14 +28,14 @@ function Header() {
         <header>
             <nav>
                 {currentUser && (
-                    <div className="user-info">
+                    <Link to="/profile" className="user-info">
                         <img 
-                            src="./images/user-icon.png"
-                            alt="User Avatar"
+                            src={`${baseURL} + ${currentUser.profile_image}` || "/images/user-icon.png"}
+                            //alt="User Avatar"
                             className="user-avatar"
                         />
                         <span className="username">{currentUser.username}</span>
-                    </div>
+                    </Link>
                 )}
                 <div className="nav-links">
                     <Link to="/">Home</Link>

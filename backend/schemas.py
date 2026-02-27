@@ -89,6 +89,22 @@ class UserResponse(BaseModel):
     username: str
     email: EmailStr
     role: str
+    profile_image: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+# UserProfileResponse: response model for returning user profile info
+class UserProfileResponse(BaseModel):
+    username: str
+    email: EmailStr
+    full_name: Optional[str]
+    phone: Optional[str]
+    city: Optional[str]
+    country: Optional[str]
+    dob: Optional[date]
+    profile_image: Optional[str]
+    mfa_enabled: bool
 
     class Config:
         from_attributes = True

@@ -1,0 +1,86 @@
+.profile-card {
+  background: white;
+  padding: 40px;
+  width: 700px;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+  text-align: center;
+  margin: 40px auto;
+}
+
+.profile-card h2 {
+  margin-bottom: 20px; 
+  color: #1F1F1F; 
+}
+
+.profile-container {
+  display: flex;
+  gap: 30px;
+}
+
+.profile-left, .profile-right {
+  flex: 1;
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.profile-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 15px;
+}
+
+.profile-left p {
+  margin: 8px 0;
+  color: #1F1F1F;
+}
+
+.profile-right h3 {
+  margin-bottom: 15px;
+  color: #1F1F1F;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+.profile-form label {
+  font-weight: bold;
+  color: #1F1F1F;
+}
+
+.profile-form input {
+  padding: 10px;
+  border: 1px solid #CFCFCF;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.profile-form input:focus {
+  outline: none;
+  border-color: #FF8C42;
+  box-shadow: 0 0 5px rgba(255,140,66,0.4);
+}
+
+.profile-form button, .mfa-btn {
+  margin-top: 10px;
+  background-color: #FF8C42;
+  color: white;
+  font-weight: bold;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: 0.2s;
+}
+
+.profile-form button:hover, .mfa-btn:hover {
+  background-color: #e97b33;
+}
