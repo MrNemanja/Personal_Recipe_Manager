@@ -2,11 +2,11 @@ from fastapi import HTTPException
 from redis_client import r
 import os
 
-#Borders
+# Borders
 username_limit = int(os.getenv("USERNAME_LIMIT"))
 ip_limit = int(os.getenv("IP_LIMIT"))
 
-#Check if there is any login limits
+# Check if there is any login limits
 def check_login_limits(username : str, ip : str):
 
     username_key = f"login:email:{username}"

@@ -76,13 +76,6 @@ class LoginUser(BaseModel):
     username: str
     password: str
 
-class MfaSetupRequest(BaseModel):
-    code: str
-
-class MfaVerifyRequest(BaseModel):
-    code: str
-    mfa_token: str
-
 # UserResponse: response model for returning user info
 class UserResponse(BaseModel):
     id: int
@@ -104,7 +97,6 @@ class UserProfileResponse(BaseModel):
     country: Optional[str]
     dob: Optional[date]
     profile_image: Optional[str]
-    mfa_enabled: bool
 
     class Config:
         from_attributes = True

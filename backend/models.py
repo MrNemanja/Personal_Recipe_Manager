@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, ForeignKey, Enum
 from sqlalchemy.orm import relationship
-from sqlalchemy.types import JSON
+from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime
 from database import Base
 import enum
@@ -10,7 +10,7 @@ class Recipe(Base):
     __tablename__ = "recipes"
     id = Column(Integer, primary_key=True, index=True)
     recipe_name = Column(String, index=True, unique=True, nullable=False)
-    recipe_ingredients = Column(JSON, nullable=False)
+    recipe_ingredients = Column(JSONB, nullable=False)
     preperation_time = Column(Integer, nullable=False)
     dish_type = Column(String, nullable=False)
     calories = Column(Integer, nullable=False)
@@ -47,9 +47,6 @@ class User(Base):
     verification_token_expires_at = Column(DateTime, nullable=True)
     reset_password_token = Column(String, nullable=True)
     reset_password_token_expires_at = Column(DateTime, nullable=True)
-    mfa_enabled = Column(Boolean, default=False)
-    mfa_last_verified: datetime = Column(DateTime, nullable=True)
-    mfa_secret = Column(String, nullable=True)
 
     # favorite_recipe_id is a foreign key to Recipe
     favorite_recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=True)

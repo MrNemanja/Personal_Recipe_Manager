@@ -45,7 +45,7 @@ async def get_recipe_by_id(id: int = Path(description="The ID of the recipe you 
     else:
         return recipe
 
-#GET /search/ -> get specific recipes
+# GET /search/ -> get specific recipes
 @router.post("/search", response_model=List[RecipeResponse])
 async def get_specific_recipes(limit: int = Query(10, gt=0, le=10, description="Max number of recipes to return"),
                                offset: int = Query(0, ge=0, description="Number of recipes to skip from the beginning"),

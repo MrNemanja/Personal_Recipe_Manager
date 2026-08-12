@@ -10,7 +10,7 @@ from pathlib import Path
 # Create all tables in the database if they do not exist
 Base.metadata.create_all(bind=engine)
 
-#Seed Admin
+# Seed Admin
 seed_admin()
 
 # Start-up for FastAPI

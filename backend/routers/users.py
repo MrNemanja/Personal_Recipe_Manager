@@ -1,21 +1,17 @@
-from fastapi import APIRouter, Path, HTTPException, Depends, Cookie, Request, UploadFile, File, Form
-from fastapi.responses import JSONResponse, StreamingResponse
-from pydantic import EmailStr
+from fastapi import APIRouter, Path, HTTPException, Depends, Cookie, Request, UploadFile, File
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User, UserRole, Recipe, RefreshToken
-from schemas import CreateUser, UserResponse, UserProfileResponse, RecipeResponse, LoginUser, VerifyEmail, ResendEmail, ForgotPasswordRequest, ResetPasswordRequest, MfaSetupRequest, MfaVerifyRequest
+from schemas import CreateUser, UserResponse, UserProfileResponse, RecipeResponse, LoginUser, VerifyEmail, ResendEmail, ForgotPasswordRequest, ResetPasswordRequest
 from passlib.context import CryptContext
-from auth import create_access_token, create_refresh_token, create_mfa_token, verify_mfa_token, delete_expired_refresh_tokens, get_current_user_optional, get_current_user
+from auth import create_access_token, create_refresh_token, delete_expired_refresh_tokens, get_current_user_optional, get_current_user
 from services.email_service import send_verification_email, send_reset_password_email
 from services.brute_force import check_login_limits, reset_login_attempts
 from services.file_service import save_profile_image
 from typing import Optional
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 import secrets
-import pyotp
-import qrcode
-import io
 import os
 
 # Routes for managing users and their favorite recipes
@@ -79,7 +75,7 @@ async def register_user(user_data: CreateUser = Depends(CreateUser.as_form),
 
     return {"message" : "Registration successful. Please check your email to verify your account."}
 
-#POST /verify-email -> email verification for registered users
+# POST /verify-email -> email verification for registered users
 @router.post("/verify-email")
 async def verify_email(token: VerifyEmail, db: Session = Depends(get_db)):
 
@@ -100,7 +96,7 @@ async def verify_email(token: VerifyEmail, db: Session = Depends(get_db)):
 
     return {"message": "Email successfully verified"}
 
-#POST /resend-verification -> resend email verification for registered users
+# POST /resend-verification -> resend email verification for registered users
 @router.post("/resend-verification")
 async def resend_verification(email: ResendEmail, db: Session = Depends(get_db)):
 
@@ -130,7 +126,7 @@ async def login_user(login_user: LoginUser, request: Request, db: Session = Depe
 
     ip = request.client.host
 
-    #Brute force check
+    # Brute force check
     check_login_limits(login_user.username, ip)
 
     user = db.query(User).filter(User.username == login_user.username).first()
@@ -147,11 +143,6 @@ async def login_user(login_user: LoginUser, request: Request, db: Session = Depe
         )
 
     reset_login_attempts(login_user.username)
-
-    if user.mfa_enabled:
-        if not user.mfa_last_verified or datetime.utcnow() - user.mfa_last_verified > timedelta(days=7):
-            temp_token = create_mfa_token({"user_id": user.id, "mfa_pending": True, "type": "mfa"})
-            return {"mfa_required": True, "mfa_token": temp_token}
 
     access_token = create_access_token({"user_id": user.id, "type" : "access"})
     refresh_token = create_refresh_token(user, db)
@@ -177,100 +168,7 @@ async def login_user(login_user: LoginUser, request: Request, db: Session = Depe
 
     return response
 
-#POST /mfa/setup make secret key and generate qrcode
-@router.post("/mfa/setup")
-def mfa_setup(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-
-    user = db.query(User).filter(User.id == current_user.userId).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    if user.mfa_enabled:
-        raise HTTPException(400, "MFA already enabled")
-
-    secret = pyotp.random_base32()
-    user.mfa_secret = secret
-    db.commit()
-    db.refresh(user)
-
-    uri = pyotp.totp.TOTP(secret).provisioning_uri(
-        name=user.username,
-        issuer_name="MyRecipeApp"
-    )
-
-    qr = qrcode.make(uri)
-    buf = io.BytesIO()
-    qr.save(buf, format='PNG')
-    buf.seek(0)
-
-    return StreamingResponse(buf, media_type="image/png")
-
-#POST /mfa/verify-setup Called only once, after enabling mfa
-@router.post("/mfa/verify-setup")
-def verify_mfa_setup(data: MfaSetupRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-
-    user = db.query(User).filter(User.id == current_user.userId).first()
-    if not user or not user.mfa_secret:
-        raise HTTPException(status_code=400, detail="MFA not setup")
-
-    totp = pyotp.TOTP(user.mfa_secret)
-    if not totp.verify(data.code):
-        raise HTTPException(status_code=401, detail="Invalid MFA code")
-
-    user.mfa_enabled = True
-    user.mfa_last_verified = datetime.utcnow()
-    db.commit()
-
-    return {"message": "MFA enabled successfully"}
-
-
-#POST /mfa/verify verification of the code of 6 digits
-@router.post("/mfa/verify-login")
-def verify_mfa(data: MfaVerifyRequest, db: Session = Depends(get_db)):
-
-    try:
-        user_id = verify_mfa_token(data.mfa_token)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid or expired MFA token")
-
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user or not user.mfa_secret:
-        raise HTTPException(status_code=400, detail="MFA not setup")
-
-    totp = pyotp.TOTP(user.mfa_secret)
-    if not totp.verify(data.code):
-        raise HTTPException(status_code=401, detail="Invalid MFA code")
-
-    user.mfa_last_verified = datetime.utcnow()
-    db.commit()
-    db.refresh(user)
-
-    access_token = create_access_token({"user_id": user.id, "type" : "access"})
-    refresh_token = create_refresh_token(user, db)
-
-    response = JSONResponse({"message": "Login successful"})
-    response.set_cookie(
-        key="access_token",
-        value=f"Bearer {access_token}",
-        httponly=True,
-        secure=True,
-        samesite="none",
-        max_age=1800
-    )
-
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        max_age=604800
-    )
-
-    return response
-
-
-#POST /refresh -> Create new access token using refresh token
+# POST /refresh -> Create new access token using refresh token
 @router.post("/refresh")
 async def refresh_token_endpoint(refresh_token: str = Cookie(None), db: Session = Depends(get_db)):
 
@@ -311,7 +209,7 @@ async def refresh_token_endpoint(refresh_token: str = Cookie(None), db: Session 
     )
     return response
 
-#POST /forgot-password -> Send a forgot password form link to user email
+# POST /forgot-password -> Send a forgot password form link to user email
 @router.post("/forgot-password")
 async def forgot_password(email: ForgotPasswordRequest, db: Session = Depends(get_db)):
     
@@ -329,7 +227,7 @@ async def forgot_password(email: ForgotPasswordRequest, db: Session = Depends(ge
         "message": "If the account exists, a password reset email has been sent."
     }
 
-#POST /reset-password -> Reset your password
+# POST /reset-password -> Reset your password
 @router.post("/reset-password")
 async def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
     
