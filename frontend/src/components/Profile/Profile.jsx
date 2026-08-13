@@ -64,8 +64,6 @@ function Profile() {
                     <p><b>City:</b> {profile.city}</p>
                     <p><b>Country:</b> {profile.country}</p>
                     <p><b>Date Of Birth:</b> {profile.dob}</p>
-                    <p><b>MFA:</b> {profile.mfa_enabled ? "Enabled" : "Disabled"}</p>
-                    {!profile.mfa_enabled && <button className="mfa-btn">Enable MFA</button>}
                 </div>
                 <div className="profile-right">
                     <h3>Edit Profile</h3>

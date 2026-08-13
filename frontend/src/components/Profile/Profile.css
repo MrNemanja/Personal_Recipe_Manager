@@ -68,7 +68,7 @@
   box-shadow: 0 0 5px rgba(255,140,66,0.4);
 }
 
-.profile-form button, .mfa-btn {
+.profile-form button {
   margin-top: 10px;
   background-color: #FF8C42;
   color: white;
@@ -81,6 +81,6 @@
   transition: 0.2s;
 }
 
-.profile-form button:hover, .mfa-btn:hover {
+.profile-form button:hover {
   background-color: #e97b33;
 }
