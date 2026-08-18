@@ -91,6 +91,11 @@ def get_current_user(access_token: Optional[str] = Cookie(None), db: Session = D
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
     user = db.query(User).filter(User.id == user_id).first()
+
+    print("TOKEN USER ID:", user_id)
+    print("DATABASE USER:", user.id if user else None)
+    print("VERIFIED:", user.is_verified if user else None)
+
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 

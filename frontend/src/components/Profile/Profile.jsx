@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { getUserProfile } from "../services/UserService"
+import { getUserProfile, UpdateProfile } from "../services/UserService"
 import "./Profile.css"
 
 function Profile() {
@@ -39,7 +39,7 @@ function Profile() {
         });
     };
 
-    const handleUpdate = () => {
+    const handleUpdate = async (e) => {
         e.preventDefault()
 
         const dataToSend = new FormData()
@@ -47,7 +47,7 @@ function Profile() {
         dataToSend.append("full_name", editData.full_name)
         dataToSend.append("phone", editData.phone)
         dataToSend.append("city", editData.city)
-        dataToSend.append("county", editData.country)
+        dataToSend.append("country", editData.country)
         dataToSend.append("dob", editData.dob)
 
         if (editData.profile_image) {
