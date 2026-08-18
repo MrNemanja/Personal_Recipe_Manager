@@ -28,3 +28,12 @@ def save_profile_image(profile_image: UploadFile) -> str:
         shutil.copyfileobj(profile_image.file, buffer)
 
     return f"uploads/profiles/{filename}"
+
+def delete_profile_image(image_path: str | None):
+    if not image_path:
+        return
+
+    file_path = Path(image_path)
+
+    if file_path.exists():
+        file_path.unlink()

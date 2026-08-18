@@ -33,12 +33,15 @@ nav a:hover {
 .user-info {
     display: flex;
     align-items: center;
-    gap: 0.5rem; 
+    justify-content: center;
+    gap: 30px; 
 }
 
 .user-avatar {
-    width: 100px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
+    object-fit: cover;
 }
 
 .username {

@@ -100,3 +100,22 @@ class UserProfileResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class UpdateProfile(BaseModel):
+    full_name : Optional[str] = Field(None, max_length=100, description="Full name of the user")
+    phone : Optional[str] = Field(None, max_length=50, description="Phone number of the user")
+    city: Optional[str] = Field(None, max_length=50, description="City of the user")
+    country: Optional[str] = Field(None, max_length=50, description="Country of the user")
+    dob: Optional[date] = Field(None, description="Date of birth of the user")
+
+    @classmethod
+    def as_form(cls, full_name: str = Form(None), phone: str = Form(None), city: str = Form(None),
+                country: str = Form(None), dob: date = Form(None)):
+
+        return cls(
+            full_name=full_name,
+            phone=phone,
+            city=city,
+            country=country,
+            dob=dob
+        )

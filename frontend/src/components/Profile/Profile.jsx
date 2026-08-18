@@ -6,7 +6,7 @@ function Profile() {
 
     const [profile, setProfile] = useState(null)
     const [editData, setEditData] = useState({})
-    const [loading, setLoading] = useState(null)
+    const [loading, setLoading] = useState(true)
     const baseURL = import.meta.env.VITE_API_URL
 
     useEffect(() => {
@@ -40,8 +40,30 @@ function Profile() {
     };
 
     const handleUpdate = () => {
-        alert("Update function is not implemented.");
-    };
+        e.preventDefault()
+
+        const dataToSend = new FormData()
+
+        dataToSend.append("full_name", editData.full_name)
+        dataToSend.append("phone", editData.phone)
+        dataToSend.append("city", editData.city)
+        dataToSend.append("county", editData.country)
+        dataToSend.append("dob", editData.dob)
+
+        if (editData.profile_image) {
+            dataToSend.append("profile_image", editData.profile_image)
+        }
+
+        try {
+            const response = await UpdateProfile(dataToSend)
+            alert(response.message)
+        
+        }catch(error) {
+            console.error(error)
+            alert(error.response?.data?.detail || "Update profile failed")
+        }
+
+    }
 
     if (loading) return <p>Loading profile...</p>
     if (!profile) return <p>Failed to load profile.</p>
@@ -52,7 +74,7 @@ function Profile() {
             <div className="profile-container">
                 <div className="profile-left">
                     <img
-                        src={`${baseURL} + ${profile.profile_image}` || "/images/user-icon.png"}
+                        src={`${baseURL}/${profile.profile_image}` || "/images/user-icon.png"}
                         alt="Profile"
                         className="profile-image"
                     />
@@ -86,6 +108,10 @@ function Profile() {
 
                         <label>Date of Birth</label>
                         <input type="date" name="dob" value={editData.dob}
+                        onChange={handleChange} />
+
+                        <label>Profile Image</label>
+                        <input type="file" id="profile_image" name="profile_image"
                         onChange={handleChange} />
 
                         <button type="button" onClick={handleUpdate}>Save Changes</button>

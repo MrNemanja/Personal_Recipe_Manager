@@ -53,6 +53,13 @@ export async function getUserProfile() {
     return response.data
 }
 
+export async function UpdateProfile(data) {
+    
+    const response = await api.put("/users/update-profile", data)
+    return response.data
+
+}
+
 export async function LogoutUser() {
     
     const response = await api.post("/users/logout")

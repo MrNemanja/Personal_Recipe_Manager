@@ -81,7 +81,6 @@ function Register() {
             alert(response.message)
             navigate("/")
 
-
         }catch(error) {
             console.error(error)
             alert(error.response?.data?.detail || "Registration failed")

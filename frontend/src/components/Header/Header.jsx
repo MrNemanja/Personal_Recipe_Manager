@@ -30,7 +30,7 @@ function Header() {
                 {currentUser && (
                     <Link to="/profile" className="user-info">
                         <img 
-                            src={`${baseURL} + ${currentUser.profile_image}` || "/images/user-icon.png"}
+                            src={`${baseURL}/${currentUser.profile_image}` || "/images/user-icon.png"}
                             //alt="User Avatar"
                             className="user-avatar"
                         />
