@@ -1,6 +1,6 @@
 import os
-from fastapi import Depends, HTTPException
-from fastapi import Cookie
+from fastapi import Depends, HTTPException, Cookie, Header
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User, RefreshToken
@@ -13,6 +13,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7))
+security = HTTPBearer(auto_error=False)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
@@ -78,28 +79,45 @@ def get_current_user_optional(access_token: Optional[str] = Cookie(None), db: Se
 
     return user
 
-def get_current_user(access_token: Optional[str] = Cookie(None), db: Session = Depends(get_db)):
-    
-    if not access_token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+def get_current_user(
+    access_token: Optional[str] = Cookie(None),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    db: Session = Depends(get_db)
+):
+    print("COOKIE:", access_token)
+    print("CREDENTIALS:", credentials)
 
-    if access_token.startswith("Bearer "):
-        access_token = access_token[len("Bearer "):]
-    
-    user_id = verify_access_token(access_token)
+    token = access_token
+
+    if not token and credentials:
+        token = credentials.credentials
+
+    if not token:
+        raise HTTPException(
+            status_code=401,
+            detail="Not authenticated"
+        )
+
+    user_id = verify_access_token(token)
+
     if not user_id:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token"
+        )
 
     user = db.query(User).filter(User.id == user_id).first()
 
-    print("TOKEN USER ID:", user_id)
-    print("DATABASE USER:", user.id if user else None)
-    print("VERIFIED:", user.is_verified if user else None)
-
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
 
     if not user.is_verified:
-        raise HTTPException(status_code=403, detail="Account not verified")
+        raise HTTPException(
+            status_code=403,
+            detail="Account not verified"
+        )
 
     return user

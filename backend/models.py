@@ -1,9 +1,16 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, ForeignKey, Enum, UniqueConstraint, Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime
 from database import Base
 import enum
+
+user_favorites = Table (
+    "user_favorites",
+    Base.metadata,
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("recipe_id", Integer, ForeignKey("recipes.id", ondelete="CASCADE"), primary_key=True)
+)
 
 # Recipe model: stores recipe details
 class Recipe(Base):
@@ -19,8 +26,7 @@ class Recipe(Base):
     owner_id = Column(Integer, ForeignKey("users.id"))
     recipe_owner = relationship("User", back_populates="owned_recipes", foreign_keys=[owner_id])
 
-    # favorited_by establishes a many-to-one relationship with User
-    favorited_by = relationship("User", back_populates="favorite_recipe", foreign_keys="[User.favorite_recipe_id]")
+    favorited_by = relationship("User", secondary=user_favorites, back_populates="favorite_recipes")
 
 # Role types
 class UserRole(enum.Enum):
@@ -48,11 +54,7 @@ class User(Base):
     reset_password_token = Column(String, nullable=True)
     reset_password_token_expires_at = Column(DateTime, nullable=True)
 
-    # favorite_recipe_id is a foreign key to Recipe
-    favorite_recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=True)
-
-    # favorite_recipe relationship allows easy access to user's favorite recipe
-    favorite_recipe = relationship("Recipe", back_populates="favorited_by", foreign_keys=[favorite_recipe_id])
+    favorite_recipes = relationship("Recipe", secondary=user_favorites, back_populates="favorited_by")
     owned_recipes = relationship("Recipe", back_populates="recipe_owner", foreign_keys=[Recipe.owner_id])
 
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")

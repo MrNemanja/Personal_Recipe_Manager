@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Path, HTTPException, Depends, Cookie, Request, UploadFile, File
+from fastapi import APIRouter, HTTPException, Depends, Cookie, Request, UploadFile, File
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
-from models import User, UserRole, Recipe, RefreshToken
-from schemas import CreateUser, UserResponse, UserProfileResponse, RecipeResponse, LoginUser, VerifyEmail, ResendEmail, \
-    ForgotPasswordRequest, ResetPasswordRequest, UpdateProfile
+from models import User, UserRole, RefreshToken
+from schemas import (CreateUser, UserResponse, UserProfileResponse, RecipeResponse, LoginUser, VerifyEmail, ResendEmail,
+                     ForgotPasswordRequest, ResetPasswordRequest, UpdateProfile)
 from passlib.context import CryptContext
 from auth import create_access_token, create_refresh_token, delete_expired_refresh_tokens, get_current_user_optional, get_current_user
 from services.email_service import send_verification_email, send_reset_password_email
@@ -64,8 +64,7 @@ async def register_user(user_data: CreateUser = Depends(CreateUser.as_form),
         verification_token=token, 
         verification_token_expires_at = datetime.utcnow() + timedelta(minutes=30),
         reset_password_token=None,
-        reset_password_token_expires_at = None,
-        favorite_recipe_id=None
+        reset_password_token_expires_at = None
         )
 
     db.add(new_user)
@@ -151,7 +150,7 @@ async def login_user(login_user: LoginUser, request: Request, db: Session = Depe
     response = JSONResponse(content={"message": "Login successful"})
     response.set_cookie(
         key="access_token",
-        value=f"Bearer {access_token}",
+        value=access_token,
         httponly=True,
         secure=True,
         samesite="none",
@@ -194,7 +193,7 @@ async def refresh_token_endpoint(refresh_token: str = Cookie(None), db: Session 
     response = JSONResponse(content={"message": "Access token refreshed"})
     response.set_cookie(
         key="access_token",
-        value=f"Bearer {access_token}",
+        value=access_token,
         httponly=True,
         secure=True,
         samesite="none",
@@ -295,69 +294,3 @@ def logout_user(refresh_token: str = Cookie(None), db: Session = Depends(get_db)
     response.delete_cookie(key="refresh_token")
     return response
 
-# GET /{user_id}/favorite -> get user's favorite recipe
-@router.get("/{user_id}/favorite", response_model=RecipeResponse)
-def get_favorite_recipe(user_id: int = Path(description="The ID of the user whose favorite recipe you want to see", gt=0),
-                        db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-
-    if user:
-        if user.favorite_recipe_id is None:
-            raise HTTPException(status_code=404, detail="User has no favorite recipe")
-        else:
-            return user.favorite_recipe
-    else:
-        raise HTTPException(status_code=404, detail="User not found")
-
-# POST /{user_id}/favorite/{recipe_id} -> mark a recipe as favorite for user
-@router.post("/{user_id}/favorite/{recipe_id}")
-def mark_favorite_recipe(user_id: int = Path(description="The ID of the user you want to tag a favorite recipe to", gt=0),
-                         recipe_id: int = Path(description="The ID of the recipe you want to mark as a favorite", gt=0)
-                         , db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    elif not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
-
-    user.favorite_recipe_id = recipe_id
-    db.commit()
-    db.refresh(recipe)
-
-    return {"message": "Recipe marked as favorite"}
-
-# PUT /{user_id}/favorite/{new_recipe_id} -> change user's favorite recipe
-@router.put("/{user_id}/favorite/{new_recipe_id}")
-def update_favorite_recipe(user_id: int = Path(description="The ID of the user you want to change a favorite recipe", gt=0),
-                         new_recipe_id: int = Path(description="The ID of the new recipe you want to mark as a favorite", gt=0)
-                         , db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    recipe = db.query(Recipe).filter(Recipe.id == new_recipe_id).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    elif not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
-
-    user.favorite_recipe_id = new_recipe_id
-    db.commit()
-    db.refresh(recipe)
-
-    return {"message": "New recipe marked as favorite"}
-
-# DELETE /{user_id}/favorite -> remove user's favorite recipe
-@router.delete("/{user_id}/favorite")
-def delete_favorite_recipe(user_id: int = Path(description="The ID of the user whose favorite recipe you want to delete", gt=0),
-                           db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    user.favorite_recipe_id = None
-    db.commit()
-    db.refresh(user)
-
-    return {"message": "Favorite recipe deleted"}

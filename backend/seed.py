@@ -23,8 +23,7 @@ def seed_admin():
                 password_hash=hashed_password,
                 email=admin_email,
                 role=UserRole.ADMIN,
-                is_verified=True,
-                favorite_recipe_id=None
+                is_verified=True
             )
             db.add(admin_user)
             db.commit()

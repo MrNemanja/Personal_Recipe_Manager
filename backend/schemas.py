@@ -1,3 +1,4 @@
+import json
 from datetime import date
 
 from fastapi import Form
@@ -5,12 +6,25 @@ from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, List
 
 # Recipe: request model for creating a recipe
-class Recipe(BaseModel):
+class CreateRecipe(BaseModel):
     recipe_name: str = Field(..., min_length=1, description="Name of the recipe")
     recipe_ingredients: List[str] = Field(..., min_items=1, description="Ingredients of the recipe")
     preperation_time: int = Field(...,gt=0, description="Time in minutes before the ingredients are prepared")
     dish_type: str = Field(...,min_length=1, description="Type of the recipe")
     calories: int = Field(...,gt=0, description="Calories of the recipe")
+
+    @classmethod
+    def as_form(
+            cls, recipe_name: str = Form(), recipe_ingredients: str = Form(), preperation_time: int = Form(),
+            dish_type: str = Form(), calories: int = Form()):
+
+        return cls(
+            recipe_name=recipe_name,
+            recipe_ingredients=recipe_ingredients.split(","),
+            preperation_time=preperation_time,
+            dish_type=dish_type,
+            calories=calories
+        )
 
 # UpdateRecipe: request model for updating recipe fields (optional fields)
 class UpdateRecipe(BaseModel):

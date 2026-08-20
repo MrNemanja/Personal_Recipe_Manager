@@ -5,7 +5,7 @@ from auth import get_current_user
 from database import get_db
 from models import Recipe as RecipeModel
 from models import User
-from schemas import RecipeResponse
+from schemas import RecipeResponse, CreateRecipe
 from typing import List, Optional
 from uuid import uuid4
 import os
@@ -79,12 +79,10 @@ async def get_specific_recipes(limit: int = Query(10, gt=0, le=10, description="
 
 # POST / -> create a new recipe
 @router.post("/", response_model=RecipeResponse)
-async def create_recipe(recipe_name: str = Form(...), recipe_ingredients: str = Form(...),
-                        preperation_time: int = Form(...), dish_type: str = Form(...),
-                        calories: int = Form(...), image: UploadFile = File(),
+async def create_recipe(recipe_data: CreateRecipe = Depends(CreateRecipe.as_form) , image: UploadFile = File(None),
                         current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 
-    if db.query(RecipeModel).filter(RecipeModel.recipe_name == recipe_name).first():
+    if db.query(RecipeModel).filter(RecipeModel.recipe_name == recipe_data.recipe_name).first():
         raise HTTPException(status_code=400, detail="Recipe already exists")
 
     if not image.content_type.startswith("image/"):
@@ -103,9 +101,9 @@ async def create_recipe(recipe_name: str = Form(...), recipe_ingredients: str = 
     image_url = f"/{UPLOAD_DIR}/{filename}"
 
     new_recipe = RecipeModel(
-                            recipe_name=recipe_name, recipe_ingredients=json.loads(recipe_ingredients),
-                            preperation_time=preperation_time, dish_type=dish_type, calories=calories,
-                            image_url=image_url, owner_id=current_user.id
+                            recipe_name=recipe_data.recipe_name, recipe_ingredients=recipe_data.recipe_ingredients,
+                            preperation_time=recipe_data.preperation_time, dish_type=recipe_data.dish_type,
+                            calories=recipe_data.calories, image_url=image_url, owner_id=current_user.id
                             )
 
     db.add(new_recipe)
@@ -186,3 +184,23 @@ async def delete_recipe(id: int, current_user: User = Depends(get_current_user),
     db.delete(recipe)
     db.commit()
     return Response(status_code=204)
+
+@router.post("/{id}/favorite")
+def add_favorite(
+        id: int = Path(description="The ID of the recipe you want to add to favorites", gt=0),
+        current_user: User = Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    recipe = db.query(RecipeModel).filter(RecipeModel.id == id).first()
+
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+
+    if recipe in current_user.favorite_recipes:
+        raise HTTPException(status_code=400, detail="Recipe is already in favorites")
+
+    current_user.favorite_recipes.append(recipe)
+
+    db.commit()
+
+    return {"message": "Recipe added to favorites"}
