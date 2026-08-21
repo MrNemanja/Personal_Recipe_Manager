@@ -19,20 +19,13 @@ router = APIRouter(
 UPLOAD_DIR = "images"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-MAX_RECIPES = 100
-
 # GET / -> list all recipes
 @router.get("/", response_model=List[RecipeResponse])
 async def get_recipes(limit: int = Query(10, gt=0, le=10, description="Max number of recipes to return"),
                       offset: int = Query(0, ge=0, description="Number of recipes to skip from the beginning"),
                       db: Session = Depends(get_db)):
 
-    if offset >= MAX_RECIPES:
-        return []
-
-    adjusted_limit = min(limit, MAX_RECIPES - offset)
-
-    recipes = db.query(RecipeModel).offset(offset).limit(adjusted_limit).all()
+    recipes = db.query(RecipeModel).offset(offset).limit(limit).all()
     return recipes
 
 # GET /{id} -> get a single recipe by ID
@@ -68,14 +61,19 @@ async def get_specific_recipes(limit: int = Query(10, gt=0, le=10, description="
         except:
             pass
 
-    if offset >= MAX_RECIPES:
-        return []
-
-    adjusted_limit = min(limit, MAX_RECIPES - offset)
-
-    recipes = query.offset(offset).limit(adjusted_limit).all()
+    recipes = query.offset(offset).limit(limit).all()
     return recipes
 
+@router.get("/me", response_model=List[RecipeResponse])
+async def get_my_recipes(
+        limit: int = Query(10, gt=0, le=10, description="Max number of recipes to return"),
+        offset: int = Query(0, ge=0, description="Number of recipes to skip from the beginning"),
+        current_user: User = Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    my_recipes = db.query(RecipeModel).filter(RecipeModel.owner_id == current_user.id).offset(offset).limit(limit).all()
+
+    return my_recipes
 
 # POST / -> create a new recipe
 @router.post("/", response_model=RecipeResponse)
