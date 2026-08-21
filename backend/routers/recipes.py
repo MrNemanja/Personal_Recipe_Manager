@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Response, Path, Query, Depends, Fi
 from sqlalchemy.orm import Session
 from auth import get_current_user
 from database import get_db
-from models import Recipe as RecipeModel
+from models import Recipe as RecipeModel, user_favorites
 from models import User
 from schemas import RecipeResponse, CreateRecipe
 from typing import List, Optional
@@ -204,3 +204,39 @@ def add_favorite(
     db.commit()
 
     return {"message": "Recipe added to favorites"}
+
+@router.get("/favorites", response_model=List[RecipeResponse])
+def get_user_favorites(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    favorite_recipes = (
+        db.query(RecipeModel)
+        .join(
+            user_favorites,
+            RecipeModel.id == user_favorites.c.recipe_id,
+        )
+        .filter(
+            user_favorites.c.user_id == current_user.id
+        )
+        .all()
+    )
+
+    return favorite_recipes
+
+@router.delete("/{id}/favorite")
+def remove_favorite(
+        id: int = Path(description="The ID of the recipe you want to remove from favorites", gt=0),
+        current_user: User = Depends(get_current_user),
+        db: Session = Depends(get_db),
+):
+    result = db.execute(
+        user_favorites.delete().where(
+            user_favorites.c.recipe_id == id,
+            user_favorites.c.user_id == current_user.id,
+        )
+    )
+
+    if result.rowcount == 0:
+        raise HTTPException(status_code=404, detail="Favorite recipe not found")
+
+    db.commit()
+
+    return {"message": "Recipe removed from favorites"}
