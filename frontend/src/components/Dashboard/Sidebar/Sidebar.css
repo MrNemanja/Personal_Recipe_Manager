@@ -1,0 +1,64 @@
+.menu {
+    display: flex;
+    flex-direction: column;
+    width: 240px;
+    flex-shrink: 0;
+    padding: 30px 20px;
+    border-right: 1px solid #E5E7EB;
+    background-color: #FFF9F4;;
+}
+
+.menu_brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 35px;
+}
+
+.menu_brand span {
+    font-size: 24px;
+}
+
+.menu_brand h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1F1F1F
+}
+
+.menu_section_title {
+    margin: 0 0 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: #9CA3AF
+
+}
+
+.menu_buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.menu_btn {
+    width: 100%;
+    padding: 12px 14px;
+    margin: 0;
+    border-radius: 8px;
+    color: #374151;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.menu_btn.active {
+    color: #FF8C42;
+    background-color: #FFF0E5;
+}
+
+.menu_btn:hover {
+    color: #FF8C42;
+    background-color: #FFF0E5;
+}
+

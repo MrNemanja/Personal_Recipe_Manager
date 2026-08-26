@@ -1,0 +1,11 @@
+.dashboard {
+    display: flex;
+    width: calc(100% - 60px);
+    min-height: calc(100vh - 60px);
+    margin: 30px;
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    overflow: hidden;
+    background-color: #FFFFFF;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}

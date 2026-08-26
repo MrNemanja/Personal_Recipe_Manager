@@ -43,8 +43,8 @@ function Header() {
                     {currentUser ? (
                         <>
                         {currentUser.role === "admin" ? 
-                        <Link to="/adminDashboard">Dashboard</Link>
-                        : <Link to="/dashboard">Dashboard</Link>
+                        <Link to="/adminDashboard">Users</Link>
+                        : <Link to="/dashboard">Recipes</Link>
                         }
                         <Link onClick={handleLogOut}>Log out</Link>
                         </>
