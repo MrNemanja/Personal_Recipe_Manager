@@ -81,11 +81,11 @@ function Profile() {
                     {console.log(profile.profile_image)}
                     <p><b>Username:</b> {profile.username}</p>
                     <p><b>Email:</b> {profile.email}</p>
-                    <p><b>Full Name:</b> {profile.full_name}</p>
-                    <p><b>Phone:</b> {profile.phone}</p>
-                    <p><b>City:</b> {profile.city}</p>
-                    <p><b>Country:</b> {profile.country}</p>
-                    <p><b>Date Of Birth:</b> {profile.dob}</p>
+                    {profile.full_name && <p><b>Full Name:</b> {profile.full_name}</p>}
+                    {profile.phone && <p><b>Phone:</b> {profile.phone}</p>}
+                    {profile.city && <p><b>City:</b> {profile.city}</p>}
+                    {profile.country && <p><b>Country:</b> {profile.country}</p>}
+                    {profile.dob && <p><b>Date Of Birth:</b> {profile.dob}</p>}
                 </div>
                 <div className="profile-right">
                     <h3>Edit Profile</h3>

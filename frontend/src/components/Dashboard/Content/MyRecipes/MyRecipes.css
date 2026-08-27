@@ -1,0 +1,25 @@
+.my_recipes {
+    width: 100%;
+}
+
+.section_header {
+    margin-bottom: 25px;
+}
+
+.section_header h2 {
+    margin: 0 0 5px;
+    color: #1F1F1F;
+    font-size: 24px;
+}
+
+.section_header p {
+    margin: 0;
+    color: #6B7280;
+    font-size: 14px;
+}
+
+.recipes_grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}

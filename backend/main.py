@@ -29,6 +29,7 @@ app.add_middleware(
 app.include_router(recipes_router)
 app.include_router(users_router)
 Path("uploads/profiles").mkdir(parents=True, exist_ok=True)
+Path("uploads/recipe_images").mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 

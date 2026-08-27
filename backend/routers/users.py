@@ -9,7 +9,7 @@ from passlib.context import CryptContext
 from auth import create_access_token, create_refresh_token, delete_expired_refresh_tokens, get_current_user_optional, get_current_user
 from services.email_service import send_verification_email, send_reset_password_email
 from services.brute_force import check_login_limits, reset_login_attempts
-from services.file_service import save_profile_image, delete_profile_image
+from services.file_service import save_profile_image, delete_image
 from typing import Optional
 from datetime import datetime, timedelta
 import secrets
@@ -262,17 +262,22 @@ def update_user_profile(current_user: User = Depends(get_current_user),
                         profile_image: UploadFile = File(None),
                         db: Session = Depends(get_db)):
 
-    current_user.full_name = profile_data.full_name
-    current_user.phone = profile_data.phone
-    current_user.city = profile_data.city
-    current_user.country = profile_data.country
-    current_user.dob = profile_data.dob
+    if profile_data.full_name is not None:
+        current_user.full_name = profile_data.full_name
+    if profile_data.phone is not None:
+        current_user.phone = profile_data.phone
+    if profile_data.city is not None:
+        current_user.city = profile_data.city
+    if profile_data.country is not None:
+        current_user.country = profile_data.country
+    if profile_data.dob is not None:
+        current_user.dob = profile_data.dob
 
     if profile_image:
         old_image = current_user.profile_image
         new_image = save_profile_image(profile_image)
         current_user.profile_image = new_image
-        delete_profile_image(old_image)
+        delete_image(old_image)
 
     db.commit()
 

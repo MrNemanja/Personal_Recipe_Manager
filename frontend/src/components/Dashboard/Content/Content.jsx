@@ -15,9 +15,7 @@ function Content({ activeSection }) {
                 </div>
                 
                 <Stats />
-            </div>
-
-            
+            </div>            
 
             {activeSection === "my-recipes" && <MyRecipes />}
             {activeSection === "favorites" && <Favorites />}

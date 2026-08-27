@@ -8,6 +8,7 @@ from models import User
 from schemas import RecipeResponse, CreateRecipe
 from typing import List, Optional
 from uuid import uuid4
+from services.file_service import save_recipe_image
 import os
 
 # Routes for managing recipes
@@ -16,7 +17,7 @@ router = APIRouter(
     tags=["Recipes"]
 )
 
-UPLOAD_DIR = "images"
+UPLOAD_DIR = "recipe_images"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # GET / -> list all recipes
@@ -27,6 +28,17 @@ async def get_recipes(limit: int = Query(10, gt=0, le=10, description="Max numbe
 
     recipes = db.query(RecipeModel).offset(offset).limit(limit).all()
     return recipes
+
+@router.get("/me", response_model=List[RecipeResponse])
+async def get_my_recipes(
+        limit: int = Query(10, gt=0, le=10, description="Max number of recipes to return"),
+        offset: int = Query(0, ge=0, description="Number of recipes to skip from the beginning"),
+        current_user: User = Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    my_recipes = db.query(RecipeModel).filter(RecipeModel.owner_id == current_user.id).offset(offset).limit(limit).all()
+
+    return my_recipes
 
 # GET /{id} -> get a single recipe by ID
 @router.get("/{id}", response_model=RecipeResponse)
@@ -64,17 +76,6 @@ async def get_specific_recipes(limit: int = Query(10, gt=0, le=10, description="
     recipes = query.offset(offset).limit(limit).all()
     return recipes
 
-@router.get("/me", response_model=List[RecipeResponse])
-async def get_my_recipes(
-        limit: int = Query(10, gt=0, le=10, description="Max number of recipes to return"),
-        offset: int = Query(0, ge=0, description="Number of recipes to skip from the beginning"),
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_db)
-):
-    my_recipes = db.query(RecipeModel).filter(RecipeModel.owner_id == current_user.id).offset(offset).limit(limit).all()
-
-    return my_recipes
-
 # POST / -> create a new recipe
 @router.post("/", response_model=RecipeResponse)
 async def create_recipe(recipe_data: CreateRecipe = Depends(CreateRecipe.as_form) , image: UploadFile = File(None),
@@ -86,22 +87,12 @@ async def create_recipe(recipe_data: CreateRecipe = Depends(CreateRecipe.as_form
     if not image.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
 
-    filename = f"{uuid4()}_{image.filename}"
-    file_path = os.path.join(UPLOAD_DIR, filename)
-
-    try:
-        contents = await image.read()
-        with open(file_path, "wb") as f:
-            f.write(contents)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to save image: {str(e)}")
-
-    image_url = f"/{UPLOAD_DIR}/{filename}"
+    recipe_image_path = save_recipe_image(image) if image else None
 
     new_recipe = RecipeModel(
                             recipe_name=recipe_data.recipe_name, recipe_ingredients=recipe_data.recipe_ingredients,
                             preperation_time=recipe_data.preperation_time, dish_type=recipe_data.dish_type,
-                            calories=recipe_data.calories, image_url=image_url, owner_id=current_user.id
+                            calories=recipe_data.calories, image_url=recipe_image_path, owner_id=current_user.id
                             )
 
     db.add(new_recipe)
