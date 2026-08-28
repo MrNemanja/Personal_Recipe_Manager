@@ -5,7 +5,7 @@ from auth import get_current_user
 from database import get_db
 from models import Recipe as RecipeModel, user_favorites
 from models import User
-from schemas import RecipeResponse, CreateRecipe
+from schemas import RecipeResponse, CreateRecipe, UserStatsResponse
 from typing import List, Optional
 from uuid import uuid4
 from services.file_service import save_recipe_image
@@ -36,11 +36,18 @@ async def get_my_recipes(
         current_user: User = Depends(get_current_user),
         db: Session = Depends(get_db)
 ):
-    my_recipes = db.query(RecipeModel).filter(RecipeModel.owner_id == current_user.id).offset(offset).limit(limit).all()
+    query = db.query(RecipeModel).filter(RecipeModel.owner_id == current_user.id)
 
-    return my_recipes
+    total = query.count()
 
-@router.get("/me/stats")
+    my_recipes = query.offset(offset).limit(limit).all()
+
+    return {
+        "my_recipes": my_recipes,
+        "total": total,
+    }
+
+@router.get("/me/stats", response_model=UserStatsResponse)
 async def get_my_stats(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     recipe_count = (
         db.query(RecipeModel)

@@ -1,6 +1,4 @@
-import json
 from datetime import date
-
 from fastapi import Form
 from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, List
@@ -46,6 +44,11 @@ class RecipeResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class UserStatsResponse(BaseModel):
+    recipe_count: int
+    favorite_count: int
+
 
 class CreateUser(BaseModel):
     username: str = Field(..., min_length=3, description="Username")
