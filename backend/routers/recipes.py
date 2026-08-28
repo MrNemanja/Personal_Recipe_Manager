@@ -31,7 +31,7 @@ async def get_recipes(limit: int = Query(10, gt=0, le=10, description="Max numbe
 
 @router.get("/me", response_model=List[RecipeResponse])
 async def get_my_recipes(
-        limit: int = Query(10, gt=0, le=10, description="Max number of recipes to return"),
+        limit: int = Query(6, gt=0, le=6, description="Max number of recipes to return"),
         offset: int = Query(0, ge=0, description="Number of recipes to skip from the beginning"),
         current_user: User = Depends(get_current_user),
         db: Session = Depends(get_db)
@@ -39,6 +39,25 @@ async def get_my_recipes(
     my_recipes = db.query(RecipeModel).filter(RecipeModel.owner_id == current_user.id).offset(offset).limit(limit).all()
 
     return my_recipes
+
+@router.get("/me/stats")
+async def get_my_stats(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    recipe_count = (
+        db.query(RecipeModel)
+        .filter(RecipeModel.owner_id == current_user.id)
+        .count()
+    )
+
+    favorite_count = (
+        db.query(user_favorites)
+        .filter(user_favorites.c.user_id == current_user.id)
+        .count()
+    )
+
+    return {
+        "recipe_count": recipe_count,
+        "favorite_count": favorite_count,
+    }
 
 # GET /{id} -> get a single recipe by ID
 @router.get("/{id}", response_model=RecipeResponse)
