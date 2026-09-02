@@ -5,7 +5,7 @@ from auth import get_current_user
 from database import get_db
 from models import Recipe as RecipeModel, user_favorites
 from models import User
-from schemas import RecipeResponse, CreateRecipe, UserStatsResponse
+from schemas import RecipeResponse, CreateRecipe, UserStatsResponse, MyRecipesResponse
 from typing import List, Optional
 from uuid import uuid4
 from services.file_service import save_recipe_image
@@ -29,7 +29,7 @@ async def get_recipes(limit: int = Query(10, gt=0, le=10, description="Max numbe
     recipes = db.query(RecipeModel).offset(offset).limit(limit).all()
     return recipes
 
-@router.get("/me", response_model=List[RecipeResponse])
+@router.get("/me", response_model=MyRecipesResponse)
 async def get_my_recipes(
         limit: int = Query(6, gt=0, le=6, description="Max number of recipes to return"),
         offset: int = Query(0, ge=0, description="Number of recipes to skip from the beginning"),

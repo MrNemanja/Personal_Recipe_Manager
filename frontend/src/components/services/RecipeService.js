@@ -1,8 +1,13 @@
 import { api } from "./api"
 
-export async function GetMyRecipes() {
+export async function GetMyRecipes(limit, offset) {
     
-    const response = await api.get("/recipes/me")
+    const response = await api.get("/recipes/me", {
+        params: {
+            limit,
+            offset
+        }
+    })
     return response.data
     
 }
