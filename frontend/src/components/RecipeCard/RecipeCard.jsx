@@ -1,13 +1,11 @@
 import "./RecipeCard.css"
 
-function RecipeCard({ recipe, variant }) {
+function RecipeCard({ recipe, variant, onClick }) {
     
     const baseURL = import.meta.env.VITE_API_URL
-    
-    console.log(recipe.image_url)
 
     return (
-        <div className="recipe_card">
+        <div className="recipe_card" onClick={onClick}>
             <img
                 src={`${baseURL}/${recipe.image_url}`}
                 alt={recipe.recipe_name}

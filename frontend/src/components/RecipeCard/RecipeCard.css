@@ -4,6 +4,7 @@
     border-radius: 12px;
     overflow: hidden;
     transition: transform 0.2 ease, box-shadow 0.2 ease;
+    cursor: pointer;
 }
 
 .recipe_card:hover {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import RecipeCard from "../../../RecipeCard/RecipeCard"
+import RecipeModal from "../../../RecipeModal/RecipeModal"
 import { GetMyRecipes } from "../../../services/RecipeService"
 import "./MyRecipes.css"
 
@@ -7,6 +8,7 @@ function MyRecipes() {
     const [recipes, setRecipes] = useState([])
     const [total, setTotal] = useState(0)
     const [page, setPage] = useState(1)
+    const [selectedRecipe, setSelectedRecipe] = useState(null)
 
     const LIMIT = 6
     const totalPages = Math.ceil(total / LIMIT)
@@ -17,7 +19,7 @@ function MyRecipes() {
                 const offset = (page - 1) * LIMIT
 
                 const response = await GetMyRecipes(LIMIT, offset)
-                
+
                 setRecipes(response.my_recipes)
                 setTotal(response.total)
             }catch(error) {
@@ -45,6 +47,7 @@ function MyRecipes() {
                             key={recipe.id}
                             recipe={recipe}
                             variant={"my-recipes"}
+                            onClick={() => setSelectedRecipe(recipe)}
                         />
                     ))}
                 </div>
@@ -62,6 +65,14 @@ function MyRecipes() {
                         Next
                     </button>
                 </div>
+
+                {selectedRecipe && (
+                    <RecipeModal
+                        recipe={selectedRecipe}
+                        onClose={() => setSelectedRecipe(null)}
+                    />
+                )}
+
             </section>
         )
     )
