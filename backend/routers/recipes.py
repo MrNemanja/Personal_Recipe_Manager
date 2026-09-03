@@ -8,7 +8,7 @@ from models import User
 from schemas import RecipeResponse, CreateRecipe, UserStatsResponse, MyRecipesResponse
 from typing import List, Optional
 from uuid import uuid4
-from services.file_service import save_recipe_image
+from services.file_service import save_recipe_image, delete_image
 import os
 
 # Routes for managing recipes
@@ -189,12 +189,7 @@ async def delete_recipe(id: int, current_user: User = Depends(get_current_user),
         raise HTTPException(status_code=403, detail="You are not the owner of this recipe")
 
     if recipe.image_url:
-        file_path = recipe.image_url.lstrip("/")
-        if os.path.exists(file_path):
-            try:
-                os.remove(file_path)
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to delete an image: {str(e)}")
+        delete_image(recipe.image_url)
 
     db.delete(recipe)
     db.commit()

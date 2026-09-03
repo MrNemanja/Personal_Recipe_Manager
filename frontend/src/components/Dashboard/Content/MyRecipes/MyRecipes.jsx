@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react"
 import RecipeCard from "../../../RecipeCard/RecipeCard"
 import RecipeModal from "../../../RecipeModal/RecipeModal"
-import { GetMyRecipes } from "../../../services/RecipeService"
+import { GetMyRecipes, DeleteRecipe } from "../../../services/RecipeService"
 import "./MyRecipes.css"
 
-function MyRecipes() {
+function MyRecipes({ onRecipeChange }) {
     const [recipes, setRecipes] = useState([])
     const [total, setTotal] = useState(0)
     const [page, setPage] = useState(1)
@@ -30,6 +30,32 @@ function MyRecipes() {
 
         fetchMyRecipes()
     }, [page])
+
+    const handleDelete =  async (id) => {
+        
+        try {
+            await DeleteRecipe(id)
+
+            onRecipeChange()
+
+            const newTotal = total - 1
+            const newTotalPages = Math.ceil(newTotal / LIMIT)
+
+            if (page > newTotalPages) {
+                setPage(newTotalPages)
+                return
+            }
+            
+            const offset = (page - 1) * LIMIT
+            const response = await GetMyRecipes(LIMIT, offset)
+
+            setRecipes(response.my_recipes)
+            setTotal(response.total)
+        }catch(error) {
+                console.error(error)
+                alert(error.response?.data?.detail || "Failed to delete recipe")
+        }
+    }
     
     return (
         recipes.length === 0 ? (
@@ -48,6 +74,7 @@ function MyRecipes() {
                             recipe={recipe}
                             variant={"my-recipes"}
                             onClick={() => setSelectedRecipe(recipe)}
+                            onDelete={handleDelete}
                         />
                     ))}
                 </div>

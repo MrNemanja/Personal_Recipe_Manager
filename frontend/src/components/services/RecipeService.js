@@ -18,3 +18,7 @@ export async function GetMyStats() {
     return response.data
 
 }
+
+export async function DeleteRecipe(recipeId) {
+    return await api.delete(`/recipes/${recipeId}`)
+}

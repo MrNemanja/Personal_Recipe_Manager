@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { GetMyStats } from "../../../services/RecipeService"
 import "./Stats.css"
 
-function Stats() {
+function Stats({ refresh }) {
     const [myRecipeCount, setMyRecipeCount] = useState(0)
     const [myFavoriteCount, setMyFavoriteCount] = useState(0)
 
@@ -18,7 +18,7 @@ function Stats() {
             }
         }
         fetchMyStats()
-    })
+    }, [refresh])
 
     return (
         <div className="stats">

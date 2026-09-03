@@ -1,8 +1,14 @@
 import "./RecipeCard.css"
 
-function RecipeCard({ recipe, variant, onClick }) {
+function RecipeCard({ recipe, variant, onClick, onDelete }) {
     
     const baseURL = import.meta.env.VITE_API_URL
+
+    const handleDelete = async (e) => {
+        e.stopPropagation()
+
+        onDelete(recipe.id)
+    }
 
     return (
         <div className="recipe_card" onClick={onClick}>
@@ -41,7 +47,10 @@ function RecipeCard({ recipe, variant, onClick }) {
                                  ✏️ Edit
                             </button>
 
-                            <button className="delete_btn">
+                            <button 
+                                className="delete_btn"
+                                onClick={handleDelete}
+                            >
                                 🗑️ Delete
                             </button>
                         </>
