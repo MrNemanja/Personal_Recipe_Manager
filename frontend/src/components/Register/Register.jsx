@@ -135,7 +135,7 @@ function Register() {
 
                 <label htmlFor="profile_image">Profile Image</label>
                 <input type="file" id="profile_image" name="profile_image" 
-                onChange={handleInput} />
+                accept="image/*" onChange={handleInput} />
 
                 <button type="submit">Register</button>
             </form>

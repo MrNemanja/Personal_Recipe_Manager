@@ -103,15 +103,12 @@ async def get_specific_recipes(limit: int = Query(10, gt=0, le=10, description="
     return recipes
 
 # POST / -> create a new recipe
-@router.post("/", response_model=RecipeResponse)
+@router.post("/")
 async def create_recipe(recipe_data: CreateRecipe = Depends(CreateRecipe.as_form) , image: UploadFile = File(None),
                         current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 
     if db.query(RecipeModel).filter(RecipeModel.recipe_name == recipe_data.recipe_name).first():
         raise HTTPException(status_code=400, detail="Recipe already exists")
-
-    if not image.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
 
     recipe_image_path = save_recipe_image(image) if image else None
 
@@ -124,7 +121,8 @@ async def create_recipe(recipe_data: CreateRecipe = Depends(CreateRecipe.as_form
     db.add(new_recipe)
     db.commit()
     db.refresh(new_recipe)
-    return new_recipe
+
+    return {"message" : "Recipe created successfully"}
 
 # PUT /{id} -> update an existing recipe
 @router.put("/{id}", response_model=RecipeResponse)

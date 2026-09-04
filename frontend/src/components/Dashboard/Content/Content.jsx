@@ -28,7 +28,9 @@ function Content({ activeSection }) {
                 <MyRecipes onRecipeChange={refreshStats}/>
             )}
             {activeSection === "favorites" && <Favorites />}
-            {activeSection === "create" && <CreateRecipe />}
+            {activeSection === "create" && (
+                <CreateRecipe onRecipeChange={refreshStats}/>
+            )}
 
         </div>
     )

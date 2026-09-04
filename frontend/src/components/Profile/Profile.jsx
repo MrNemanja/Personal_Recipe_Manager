@@ -112,7 +112,7 @@ function Profile() {
 
                         <label>Profile Image</label>
                         <input type="file" id="profile_image" name="profile_image"
-                        onChange={handleChange} />
+                        accept="image/*" onChange={handleChange} />
 
                         <button type="button" onClick={handleUpdate}>Save Changes</button>
                     </form>

@@ -20,5 +20,14 @@ export async function GetMyStats() {
 }
 
 export async function DeleteRecipe(recipeId) {
+    
     return await api.delete(`/recipes/${recipeId}`)
+
+}
+
+export async function CreateRecipeRequest(recipeFormData) {
+    
+    const response = await api.post("/recipes/", recipeFormData)
+    return response.data
+
 }
