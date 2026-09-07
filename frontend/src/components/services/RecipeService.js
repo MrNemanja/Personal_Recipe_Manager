@@ -31,3 +31,8 @@ export async function CreateRecipeRequest(recipeFormData) {
     return response.data
 
 }
+
+export async function AddFavorite(recipeId) {
+    
+    return await api.post(`/recipes/${recipeId}/favorite`)
+}

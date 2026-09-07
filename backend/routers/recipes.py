@@ -1,7 +1,7 @@
 import json
 from fastapi import APIRouter, HTTPException, Response, Path, Query, Depends, File, UploadFile, Form
 from sqlalchemy.orm import Session
-from auth import get_current_user
+from auth import get_current_user, get_current_user_optional
 from database import get_db
 from models import Recipe as RecipeModel, user_favorites
 from models import User
@@ -24,10 +24,24 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 @router.get("/", response_model=List[RecipeResponse])
 async def get_recipes(limit: int = Query(10, gt=0, le=10, description="Max number of recipes to return"),
                       offset: int = Query(0, ge=0, description="Number of recipes to skip from the beginning"),
+                      current_user: Optional[User] = Depends(get_current_user_optional),
                       db: Session = Depends(get_db)):
 
     recipes = db.query(RecipeModel).offset(offset).limit(limit).all()
-    return recipes
+
+    return [
+        {
+            "id": recipe.id,
+            "recipe_name": recipe.recipe_name,
+            "recipe_ingredients": recipe.recipe_ingredients,
+            "preperation_time": recipe.preperation_time,
+            "dish_type": recipe.dish_type,
+            "calories": recipe.calories,
+            "image_url": recipe.image_url,
+            "is_favorite": current_user is not None and recipe in current_user.favorite_recipes
+        }
+        for recipe in recipes
+    ]
 
 @router.get("/me", response_model=MyRecipesResponse)
 async def get_my_recipes(
@@ -41,6 +55,20 @@ async def get_my_recipes(
     total = query.count()
 
     my_recipes = query.offset(offset).limit(limit).all()
+
+    my_recipes = [
+        {
+            "id": recipe.id,
+            "recipe_name": recipe.recipe_name,
+            "recipe_ingredients": recipe.recipe_ingredients,
+            "preperation_time": recipe.preperation_time,
+            "dish_type": recipe.dish_type,
+            "calories": recipe.calories,
+            "image_url": recipe.image_url,
+            "is_favorite": recipe in current_user.favorite_recipes
+        }
+        for recipe in my_recipes
+    ]
 
     return {
         "my_recipes": my_recipes,
@@ -211,7 +239,7 @@ def add_favorite(
 
     db.commit()
 
-    return {"message": "Recipe added to favorites"}
+    return Response(status_code=201)
 
 @router.get("/favorites", response_model=List[RecipeResponse])
 def get_user_favorites(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):

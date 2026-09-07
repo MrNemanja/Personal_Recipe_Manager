@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import RecipeCard from "../../../RecipeCard/RecipeCard"
 import RecipeModal from "../../../RecipeModal/RecipeModal"
-import { GetMyRecipes, DeleteRecipe } from "../../../services/RecipeService"
+import { GetMyRecipes, DeleteRecipe, AddFavorite } from "../../../services/RecipeService"
 import "./MyRecipes.css"
 
 function MyRecipes({ onRecipeChange }) {
@@ -57,6 +57,24 @@ function MyRecipes({ onRecipeChange }) {
         }
     }
     
+    const handleFavorite = async (id) => {
+        
+        try {
+            await AddFavorite(id)
+
+            onRecipeChange()
+
+            const offset = (page - 1) * LIMIT
+            const response = await GetMyRecipes(LIMIT, offset)
+
+            setRecipes(response.my_recipes)
+            setTotal(response.total)
+        }catch(error) {
+            console.error(error)
+            alert(error.response?.data?.detail || "Failed to add recipe to favorites")
+        }
+    }
+
     return (
         recipes.length === 0 ? (
             <p className="no_recipes">No recipes yet.</p>
@@ -75,6 +93,7 @@ function MyRecipes({ onRecipeChange }) {
                             variant={"my-recipes"}
                             onClick={() => setSelectedRecipe(recipe)}
                             onDelete={handleDelete}
+                            onFavorite={handleFavorite}
                         />
                     ))}
                 </div>

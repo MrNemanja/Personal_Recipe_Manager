@@ -84,9 +84,6 @@ def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: Session = Depends(get_db)
 ):
-    print("COOKIE:", access_token)
-    print("CREDENTIALS:", credentials)
-
     token = access_token
 
     if not token and credentials:

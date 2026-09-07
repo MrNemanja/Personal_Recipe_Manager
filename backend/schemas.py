@@ -41,6 +41,7 @@ class RecipeResponse(BaseModel):
     dish_type: str
     calories: int
     image_url : Optional[str] = None
+    is_favorite: bool
 
     class Config:
         from_attributes = True
