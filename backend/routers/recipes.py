@@ -275,4 +275,4 @@ def remove_favorite(
 
     db.commit()
 
-    return {"message": "Recipe removed from favorites"}
+    return Response(status_code=204)

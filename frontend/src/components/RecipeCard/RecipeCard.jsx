@@ -1,6 +1,6 @@
 import "./RecipeCard.css"
 
-function RecipeCard({ recipe, variant, onClick, onDelete, onFavorite }) {
+function RecipeCard({ recipe, variant, onClick, onDelete, onFavorite, onFavoriteRemove }) {
     
     const baseURL = import.meta.env.VITE_API_URL
 
@@ -14,6 +14,12 @@ function RecipeCard({ recipe, variant, onClick, onDelete, onFavorite }) {
         e.stopPropagation()
 
         onFavorite(recipe.id)
+    }
+
+    const handleRemoveFavorite = async (e) => {
+        e.stopPropagation()
+
+        onFavoriteRemove(recipe.id)
     }
 
     return (
@@ -40,7 +46,10 @@ function RecipeCard({ recipe, variant, onClick, onDelete, onFavorite }) {
                     {(variant === "home" || variant === "my-recipes") && (
                         <>
                             {recipe.is_favorite ? (
-                                <button className="remove_favorite_btn">
+                                <button 
+                                    className="remove_favorite_btn"
+                                    onClick={handleRemoveFavorite}
+                                >
                                     💔 Remove
                                 </button>
                             ) : (
@@ -70,7 +79,10 @@ function RecipeCard({ recipe, variant, onClick, onDelete, onFavorite }) {
                     )}
 
                     { variant === "favorites" && (
-                        <button className="remove_favorite_btn">
+                        <button 
+                            className="remove_favorite_btn"
+                            onClick={handleRemoveFavorite}
+                        >
                             💔 Remove
                         </button>
                     )}

@@ -36,3 +36,8 @@ export async function AddFavorite(recipeId) {
     
     return await api.post(`/recipes/${recipeId}/favorite`)
 }
+
+export async function RemoveFavorite(recipeId) {
+    
+    return await api.delete(`/recipes/${recipeId}/favorite`)
+}
