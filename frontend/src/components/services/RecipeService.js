@@ -41,3 +41,14 @@ export async function RemoveFavorite(recipeId) {
     
     return await api.delete(`/recipes/${recipeId}/favorite`)
 }
+
+export async function GetMyFavorites(limit, offset) {
+    
+    const response = await api.get("/recipes/favorites", {
+        params: {
+            limit,
+            offset
+        }
+    })
+    return response.data
+}

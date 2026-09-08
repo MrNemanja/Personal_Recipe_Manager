@@ -54,6 +54,10 @@ class MyRecipesResponse(BaseModel):
     my_recipes: List[RecipeResponse]
     total: int
 
+class MyFavoriteRecipesResponse(BaseModel):
+    favorite_recipes: List[RecipeResponse]
+    total: int
+
 class CreateUser(BaseModel):
     username: str = Field(..., min_length=3, description="Username")
     email: EmailStr = Field(..., description="Email address")

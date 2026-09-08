@@ -5,7 +5,7 @@ from auth import get_current_user, get_current_user_optional
 from database import get_db
 from models import Recipe as RecipeModel, user_favorites
 from models import User
-from schemas import RecipeResponse, CreateRecipe, UserStatsResponse, MyRecipesResponse
+from schemas import RecipeResponse, CreateRecipe, UserStatsResponse, MyRecipesResponse, MyFavoriteRecipesResponse
 from typing import List, Optional
 from uuid import uuid4
 from services.file_service import save_recipe_image, delete_image
@@ -92,6 +92,47 @@ async def get_my_stats(current_user: User = Depends(get_current_user), db: Sessi
     return {
         "recipe_count": recipe_count,
         "favorite_count": favorite_count,
+    }
+
+@router.get("/favorites", response_model=MyFavoriteRecipesResponse)
+def get_user_favorites(current_user: User = Depends(get_current_user),
+                       db: Session = Depends(get_db),
+                       limit: int = Query(6, gt=0, le=6, description="Max number of recipes to return"),
+                       offset: int = Query(0, ge=0, description="Number of recipes to skip from the beginning")
+):
+
+    query = (
+        db.query(RecipeModel)
+        .join(
+            user_favorites,
+            RecipeModel.id == user_favorites.c.recipe_id,
+        )
+        .filter(
+            user_favorites.c.user_id == current_user.id
+        )
+    )
+
+    total = query.count()
+
+    favorite_recipes = query.offset(offset).limit(limit).all()
+
+    favorite_recipes = [
+        {
+            "id": favorite_recipe.id,
+            "recipe_name": favorite_recipe.recipe_name,
+            "recipe_ingredients": favorite_recipe.recipe_ingredients,
+            "preperation_time": favorite_recipe.preperation_time,
+            "dish_type": favorite_recipe.dish_type,
+            "calories": favorite_recipe.calories,
+            "image_url": favorite_recipe.image_url,
+            "is_favorite": True
+        }
+        for favorite_recipe in favorite_recipes
+    ]
+
+    return {
+        "favorite_recipes": favorite_recipes,
+        "total": total
     }
 
 # GET /{id} -> get a single recipe by ID
@@ -240,22 +281,6 @@ def add_favorite(
     db.commit()
 
     return Response(status_code=201)
-
-@router.get("/favorites", response_model=List[RecipeResponse])
-def get_user_favorites(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    favorite_recipes = (
-        db.query(RecipeModel)
-        .join(
-            user_favorites,
-            RecipeModel.id == user_favorites.c.recipe_id,
-        )
-        .filter(
-            user_favorites.c.user_id == current_user.id
-        )
-        .all()
-    )
-
-    return favorite_recipes
 
 @router.delete("/{id}/favorite")
 def remove_favorite(
