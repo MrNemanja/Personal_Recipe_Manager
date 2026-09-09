@@ -52,3 +52,10 @@ export async function GetMyFavorites(limit, offset) {
     })
     return response.data
 }
+
+export async function UpdateRecipe(recipeId, formData) {
+
+    const response = await api.put(`/recipes/${recipeId}`, formData)
+    return response.data
+
+}

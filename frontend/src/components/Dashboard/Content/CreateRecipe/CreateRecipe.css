@@ -80,7 +80,11 @@
 }
 
 .error {
-    margin: 0;
-    color: #d93025;
-    font-size: 13px;
+    margin-bottom: 20px;
+    padding: 10px 12px;
+
+    color: #c62828;
+    background-color: #ffe5e5;
+
+    border-radius: 6px;
 }

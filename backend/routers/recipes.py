@@ -5,7 +5,8 @@ from auth import get_current_user, get_current_user_optional
 from database import get_db
 from models import Recipe as RecipeModel, user_favorites
 from models import User
-from schemas import RecipeResponse, CreateRecipe, UserStatsResponse, MyRecipesResponse, MyFavoriteRecipesResponse
+from schemas import RecipeResponse, CreateRecipe, UserStatsResponse, MyRecipesResponse, MyFavoriteRecipesResponse, \
+    UpdateRecipe
 from typing import List, Optional
 from uuid import uuid4
 from services.file_service import save_recipe_image, delete_image
@@ -50,7 +51,7 @@ async def get_my_recipes(
         current_user: User = Depends(get_current_user),
         db: Session = Depends(get_db)
 ):
-    query = db.query(RecipeModel).filter(RecipeModel.owner_id == current_user.id)
+    query = db.query(RecipeModel).filter(RecipeModel.owner_id == current_user.id).order_by(RecipeModel.id.asc())
 
     total = query.count()
 
@@ -195,9 +196,9 @@ async def create_recipe(recipe_data: CreateRecipe = Depends(CreateRecipe.as_form
 
 # PUT /{id} -> update an existing recipe
 @router.put("/{id}", response_model=RecipeResponse)
-async def update_recipe(id: int, recipe_name: Optional[str] = Form(None), recipe_ingredients: Optional[str] = Form(None),
-                        preperation_time: Optional[int] = Form(None), dish_type: Optional[str] = Form(None),
-                        calories: Optional[int] = Form(None), image: Optional[UploadFile] = File(None),
+async def update_recipe(id: int,
+                        recipe_data: UpdateRecipe = Depends(UpdateRecipe.as_form),
+                        image: Optional[UploadFile] = File(None),
                         current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 
     recipe = db.query(RecipeModel).filter(RecipeModel.id == id).first()
@@ -208,41 +209,36 @@ async def update_recipe(id: int, recipe_name: Optional[str] = Form(None), recipe
     if current_user.id != recipe.owner_id:
         raise HTTPException(status_code=403, detail="You are not the owner of this recipe")
 
-    if recipe_name:
-        recipe.recipe_name = recipe_name
-    if recipe_ingredients:
-        recipe.recipe_ingredients = json.loads(recipe_ingredients)
-    if preperation_time:
-        recipe.preperation_time = preperation_time
-    if dish_type:
-        recipe.dish_type = dish_type
-    if calories:
-        recipe.calories = calories
+    if recipe_data.recipe_name is not None:
+        recipe.recipe_name = recipe_data.recipe_name
+    if recipe_data.recipe_ingredients is not None:
+        recipe.recipe_ingredients = recipe_data.recipe_ingredients
+    if recipe_data.preperation_time is not None:
+        recipe.preperation_time = recipe_data.preperation_time
+    if recipe_data.dish_type is not None:
+        recipe.dish_type = recipe_data.dish_type
+    if recipe_data.calories is not None:
+        recipe.calories = recipe_data.calories
+
     if image:
-        if not image.content_type.startswith("image/"):
-            raise HTTPException(status_code=400, detail="File must be an image")
-
-        if recipe.image_url:
-            old_file_path = recipe.image_url.lstrip("/")
-            if os.path.exists(old_file_path):
-                try:
-                    os.remove(old_file_path)
-                except Exception as e:
-                    raise HTTPException(status_code=500, detail=f"Failed to delete old image: {str(e)}")
-
-        filename = f"{uuid4()}_{image.filename}"
-        file_path = os.path.join(UPLOAD_DIR, filename)
-        try:
-            contents = await image.read()
-            with open(file_path, "wb") as f:
-                f.write(contents)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to save new image: {str(e)}")
-        recipe.image_url = f"/{UPLOAD_DIR}/{filename}"
+      old_image = recipe.image_url
+      new_image = save_recipe_image(image)
+      recipe.image_url = new_image
+      delete_image(old_image)
 
     db.commit()
     db.refresh(recipe)
-    return recipe
+
+    return {
+        "id": recipe.id,
+        "recipe_name": recipe.recipe_name,
+        "recipe_ingredients": recipe.recipe_ingredients,
+        "preperation_time": recipe.preperation_time,
+        "dish_type": recipe.dish_type,
+        "calories": recipe.calories,
+        "image_url": recipe.image_url,
+        "is_favorite": recipe in current_user.favorite_recipes
+    }
 
 # DELETE /{id} -> delete a recipe
 @router.delete("/{id}")

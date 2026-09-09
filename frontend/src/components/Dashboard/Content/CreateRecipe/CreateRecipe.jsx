@@ -32,14 +32,6 @@ function CreateRecipe({ onRecipeChange }) {
             newErrors.recipe_ingredients = "Please enter all ingredients correctly"
         }
 
-        if (Number(recipeFormData.preperation_time <= 0)) {
-            newErrors.preperation_time = "Preperation time must be greater than 0"
-        }
-
-        if (Number(recipeFormData.calories <= 0)) {
-            newErrors.calories = "Calories must be greater than 0"
-        }
-
         return newErrors
     }
 
@@ -130,9 +122,6 @@ function CreateRecipe({ onRecipeChange }) {
                         placeholder="e.g. 30"
                         required
                     />
-                    {errors.preperation_time && (
-                        <p className="error">{errors.preperation_time}</p>
-                    )}
                 </div>
 
                 <div className="form_group">
@@ -142,6 +131,7 @@ function CreateRecipe({ onRecipeChange }) {
                         name="dish_type"
                         value={recipeFormData.dish_type}
                         onChange={handleInput}
+                        min="1"
                         placeholder="e.g. Main Course"
                         required
                     />
@@ -154,12 +144,10 @@ function CreateRecipe({ onRecipeChange }) {
                         name="calories"
                         value={recipeFormData.calories}
                         onChange={handleInput}
+                        min="1"
                         placeholder="e.g. 500"
                         required
                     />
-                    {errors.calories && (
-                        <p className="error">{errors.calories}</p>
-                    )}
                 </div>
 
                 <div className="form_group">

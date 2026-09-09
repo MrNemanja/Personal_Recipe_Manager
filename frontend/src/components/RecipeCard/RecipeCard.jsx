@@ -1,6 +1,6 @@
 import "./RecipeCard.css"
 
-function RecipeCard({ recipe, variant, onClick, onDelete, onFavorite, onFavoriteRemove }) {
+function RecipeCard({ recipe, variant, onClick, onEdit, onDelete, onFavorite, onFavoriteRemove }) {
     
     const baseURL = import.meta.env.VITE_API_URL
 
@@ -65,7 +65,13 @@ function RecipeCard({ recipe, variant, onClick, onDelete, onFavorite, onFavorite
 
                     { variant === "my-recipes" && (
                         <>
-                            <button className="edit_btn">
+                            <button 
+                                className="edit_btn"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onEdit()
+                                }}
+                            >
                                  ✏️ Edit
                             </button>
 

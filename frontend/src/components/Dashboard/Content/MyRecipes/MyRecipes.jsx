@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import RecipeCard from "../../../RecipeCard/RecipeCard"
 import RecipeModal from "../../../RecipeModal/RecipeModal"
+import EditRecipe from "./EditRecipe/EditRecipe"
 import { GetMyRecipes, DeleteRecipe, AddFavorite, RemoveFavorite } from "../../../services/RecipeService"
 import "./MyRecipes.css"
 
@@ -9,6 +10,7 @@ function MyRecipes({ onRecipeChange }) {
     const [total, setTotal] = useState(0)
     const [page, setPage] = useState(1)
     const [selectedRecipe, setSelectedRecipe] = useState(null)
+    const [recipeToEdit, setRecipeToEdit] = useState(null)
 
     const LIMIT = 6
     const totalPages = Math.ceil(total / LIMIT)
@@ -93,6 +95,24 @@ function MyRecipes({ onRecipeChange }) {
         }
     }
 
+    const handleRecipeUpdated = (updatedRecipe) => {
+        console.log("UPDATED RECIPE:", updatedRecipe)
+
+        setRecipes(prevRecipes => {
+            console.log("BEFORE UPDATE:", prevRecipes)
+
+            const newRecipes = prevRecipes.map(recipe =>
+                recipe.id === updatedRecipe.id
+                    ? updatedRecipe
+                    : recipe
+            )
+
+        console.log("AFTER UPDATE:", newRecipes)
+
+        return newRecipes
+    })
+}
+
     return (
         recipes.length === 0 ? (
             <p className="no_recipes">No recipes yet.</p>
@@ -110,6 +130,7 @@ function MyRecipes({ onRecipeChange }) {
                             recipe={recipe}
                             variant={"my-recipes"}
                             onClick={() => setSelectedRecipe(recipe)}
+                            onEdit={() => setRecipeToEdit(recipe)}
                             onDelete={handleDelete}
                             onFavorite={handleFavorite}
                             onFavoriteRemove={handleRemoveFavorite}
@@ -137,6 +158,15 @@ function MyRecipes({ onRecipeChange }) {
                         onClose={() => setSelectedRecipe(null)}
                     />
                 )}
+
+                {recipeToEdit && (
+                    <EditRecipe 
+                        recipe={recipeToEdit}
+                        onClose={() => setRecipeToEdit(null)}
+                        onRecipeUpdated={handleRecipeUpdated}
+                    />
+                )}
+
 
             </section>
         )

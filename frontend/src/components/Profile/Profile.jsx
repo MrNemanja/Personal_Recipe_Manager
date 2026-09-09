@@ -35,7 +35,7 @@ function Profile() {
     const handleChange = (e) => {
         setEditData({
             ...editData,
-            [e.target.name]: e.target.value,
+            [e.target.name] : e.target.files? e.target.files[0] : e.target.value
         });
     };
 
@@ -74,11 +74,14 @@ function Profile() {
             <div className="profile-container">
                 <div className="profile-left">
                     <img
-                        src={`${baseURL}/${profile.profile_image}` || "/images/user-icon.png"}
+                        src={
+                            profile.profile_image 
+                            ? `${baseURL}/${profile.profile_image}` 
+                            : "/images/user-icon.png"
+                        }
                         alt="Profile"
                         className="profile-image"
                     />
-                    {console.log(profile.profile_image)}
                     <p><b>Username:</b> {profile.username}</p>
                     <p><b>Email:</b> {profile.email}</p>
                     {profile.full_name && <p><b>Full Name:</b> {profile.full_name}</p>}
