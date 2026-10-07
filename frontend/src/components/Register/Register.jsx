@@ -1,6 +1,6 @@
 import './Register.css'
-import { RegisterUser } from '../services/UserService'
-import {useState, useEffect} from 'react'
+import { RegisterUser } from '../../services/UserService'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 function Register() {

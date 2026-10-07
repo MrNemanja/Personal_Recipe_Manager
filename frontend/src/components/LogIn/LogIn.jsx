@@ -1,7 +1,7 @@
 import './LogIn.css'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LoginUser, getCurrentUser } from '../services/UserService'
+import { LoginUser, getCurrentUser } from '../../services/UserService'
 import { useAuth } from '../AuthContext'
 
 function LogIn() {

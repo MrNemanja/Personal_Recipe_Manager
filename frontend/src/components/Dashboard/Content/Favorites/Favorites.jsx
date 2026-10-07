@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import RecipeCard from "../../../RecipeCard/RecipeCard"
 import RecipeModal from "../../../RecipeModal/RecipeModal"
-import { GetMyRecipes, DeleteRecipe, AddFavorite, RemoveFavorite, GetMyFavorites } from "../../../services/RecipeService"
+import { RemoveFavorite, GetMyFavorites } from "../../../../services/RecipeService"
 import "./Favorites.css"
 
 function Favorites({ onRecipeChange }) {

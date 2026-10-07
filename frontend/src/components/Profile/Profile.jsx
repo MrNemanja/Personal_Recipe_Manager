@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { getUserProfile, UpdateProfile } from "../services/UserService"
+import { getUserProfile, UpdateProfile } from "../../services/UserService"
 import "./Profile.css"
 
 function Profile() {

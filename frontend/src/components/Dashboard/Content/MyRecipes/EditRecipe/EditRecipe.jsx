@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { UpdateRecipe } from "../../../../services/RecipeService"
+import { UpdateRecipe } from "../../../../../services/RecipeService"
 import "./EditRecipe.css"
 
 function EditRecipe({ recipe, onClose, onRecipeUpdated }) {

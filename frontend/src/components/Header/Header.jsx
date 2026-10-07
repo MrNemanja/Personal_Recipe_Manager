@@ -1,6 +1,6 @@
 import './Header.css'
 import { Link, useNavigate } from "react-router-dom"
-import { LogoutUser } from "../services/UserService"
+import { LogoutUser } from "../../services/UserService"
 import { useAuth } from '../AuthContext'
 
 function Header() {

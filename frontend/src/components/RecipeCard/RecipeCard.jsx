@@ -1,3 +1,4 @@
+import { useAuth } from "../AuthContext"
 import "./RecipeCard.css"
 
 function RecipeCard({ recipe, variant, onClick, onEdit, onDelete, onFavorite, onFavoriteRemove }) {

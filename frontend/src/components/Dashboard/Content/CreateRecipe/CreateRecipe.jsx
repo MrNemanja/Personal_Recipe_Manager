@@ -1,5 +1,5 @@
 import { useRef, useState } from "react"
-import { CreateRecipeRequest } from "../../../services/RecipeService"
+import { CreateRecipeRequest } from "../../../../services/RecipeService"
 import "./CreateRecipe.css"
 
 function CreateRecipe({ onRecipeChange }) {

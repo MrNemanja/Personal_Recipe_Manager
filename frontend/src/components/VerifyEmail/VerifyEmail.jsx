@@ -2,7 +2,7 @@ import './VerifyEmail.css'
 import { useState, useEffect } from "react"
 import { useSearchParams, Link } from "react-router-dom"
 import { toast } from "react-toastify"
-import { VeifyUserEmail } from "../services/UserService"
+import { VeifyUserEmail } from "../../services/UserService"
 
 function VerifyEmail() {
     const [searchParams] = useSearchParams()

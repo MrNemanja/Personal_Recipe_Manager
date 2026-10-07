@@ -1,9 +1,10 @@
 import json
-from fastapi import APIRouter, HTTPException, Response, Path, Query, Depends, File, UploadFile
+from fastapi import APIRouter, HTTPException, Response, Path, Query, Depends, File, UploadFile, Header
 from sqlalchemy.orm import Session
 from auth import get_current_user, get_current_user_optional
+from datetime import datetime, timedelta
 from database import get_db
-from models import Recipe as RecipeModel, user_favorites
+from models import Recipe as RecipeModel, user_favorites, RecipeView
 from models import User
 from schemas import RecipeResponse, CreateRecipe, UserStatsResponse, MyRecipesResponse, MyFavoriteRecipesResponse, \
     UpdateRecipe
@@ -135,6 +136,34 @@ def get_user_favorites(current_user: User = Depends(get_current_user),
         "total": total
     }
 
+# GET /rotd -> get recipe of the day
+@router.get("/rotd", response_model=RecipeResponse)
+async def get_recipe_of_the_day(current_user: User = Depends(get_current_user_optional),db: Session = Depends(get_db)):
+    recipes = db.query(RecipeModel).all()
+
+    if not recipes:
+        raise HTTPException(status_code=404, detail="No recipes found")
+
+    scores = {}
+
+    for recipe in recipes:
+        scores[recipe.id] = len(recipe.favorited_by) * 5 + len(recipe.views)
+
+    max_id = max(scores, key=scores.get)
+
+    for recipe in recipes:
+        if recipe.id == max_id:
+            return {
+                "id": recipe.id,
+                "recipe_name": recipe.recipe_name,
+                "recipe_ingredients": recipe.recipe_ingredients,
+                "preperation_time": recipe.preperation_time,
+                "dish_type": recipe.dish_type,
+                "calories": recipe.calories,
+                "image_url": recipe.image_url,
+                "is_favorite": current_user is not None and recipe in current_user.favorite_recipes
+            }
+
 # GET /{id} -> get a single recipe by ID
 @router.get("/{id}", response_model=RecipeResponse)
 async def get_recipe_by_id(id: int = Path(description="The ID of the recipe you want to view", gt=0), db: Session = Depends(get_db)):
@@ -144,6 +173,56 @@ async def get_recipe_by_id(id: int = Path(description="The ID of the recipe you 
         raise HTTPException(status_code=404, detail="Recipe not found")
     else:
         return recipe
+
+# POST /{id}/view -> Register recipe view
+@router.post("/{id}/view")
+async def register_recipe_view(id: int = Path(description="The ID of the recipe you want to register view"),
+                               visitor_id: str | None = Header(default=None, alias="X-Visitor-ID"),
+                               db: Session = Depends(get_db),
+                               current_user: User = Depends(get_current_user_optional)):
+
+    recipe = db.query(RecipeModel).filter(RecipeModel.id == id).first()
+
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+
+    twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
+
+    if current_user:
+        existing_view = (
+                db.query(RecipeView)
+                .filter(
+                    RecipeView.recipe_id == id,
+                    RecipeView.user_id == current_user.id,
+                    RecipeView.viewed_at >= twenty_four_hours_ago
+                ).first()
+        )
+    else:
+        if not visitor_id:
+            raise HTTPException(status_code=400, detail="Visitor ID required for unauthenticated users")
+
+        existing_view = (
+            db.query(RecipeView)
+            .filter(
+                RecipeView.recipe_id == id,
+                RecipeView.visitor_id == visitor_id,
+                RecipeView.viewed_at >= twenty_four_hours_ago
+            ).first()
+        )
+
+    if existing_view:
+        return Response(status_code=204)
+
+    recipe_view = RecipeView(
+        recipe_id=id,
+        user_id=current_user.id if current_user else None,
+        visitor_id=visitor_id,
+    )
+
+    db.add(recipe_view)
+    db.commit()
+
+    return Response(status_code=204)
 
 # GET /search/ -> get specific recipes
 @router.post("/search", response_model=List[RecipeResponse])

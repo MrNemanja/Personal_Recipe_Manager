@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, ForeignKey, Enum, UniqueConstraint, Table
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, ForeignKey, Enum, Table, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime
@@ -15,7 +15,7 @@ user_favorites = Table (
 # Recipe model: stores recipe details
 class Recipe(Base):
     __tablename__ = "recipes"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     recipe_name = Column(String, index=True, unique=True, nullable=False)
     recipe_ingredients = Column(JSONB, nullable=False)
     preperation_time = Column(Integer, nullable=False)
@@ -28,6 +28,8 @@ class Recipe(Base):
 
     favorited_by = relationship("User", secondary=user_favorites, back_populates="favorite_recipes")
 
+    views = relationship("RecipeView", back_populates="recipe", cascade="all, delete-orphan")
+
 # Role types
 class UserRole(enum.Enum):
     USER = "user"
@@ -37,7 +39,7 @@ class UserRole(enum.Enum):
 # User model: stores user details
 class User(Base):
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     username = Column(String, index=True, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
     email = Column(String, index=True, unique=True, nullable=False)
@@ -59,10 +61,28 @@ class User(Base):
 
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
 
+    recipe_views = relationship("RecipeView", back_populates="user", cascade="all, delete-orphan")
+
+class RecipeView(Base):
+    __tablename__ = "recipe_views"
+    id = Column(Integer, primary_key=True)
+    recipe_id = Column(Integer, ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    visitor_id = Column(String, index=True, nullable=True)
+    viewed_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    recipe = relationship("Recipe", back_populates="views")
+    user = relationship("User", back_populates="recipe_views")
+
+    __table_args__ = (
+        Index("ix_recipe_views_recipe_user", "recipe_id", "user_id"),
+        Index("ix_recipe_views_recipe_visitor", "recipe_id", "visitor_id"),
+    )
+
 # Refresh token model - store refresh token details
 class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     token = Column(String, unique=True, nullable=False)
     expires_at = Column(DateTime, nullable=False)

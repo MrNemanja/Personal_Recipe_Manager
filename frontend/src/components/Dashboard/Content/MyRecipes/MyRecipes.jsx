@@ -2,7 +2,13 @@ import { useState, useEffect } from "react"
 import RecipeCard from "../../../RecipeCard/RecipeCard"
 import RecipeModal from "../../../RecipeModal/RecipeModal"
 import EditRecipe from "./EditRecipe/EditRecipe"
-import { GetMyRecipes, DeleteRecipe, AddFavorite, RemoveFavorite } from "../../../services/RecipeService"
+import { 
+    GetMyRecipes, 
+    DeleteRecipe, 
+    AddFavorite, 
+    RemoveFavorite,
+    RegisterRecipeView
+} from "../../../../services/RecipeService"
 import "./MyRecipes.css"
 
 function MyRecipes({ onRecipeChange }) {
@@ -110,8 +116,19 @@ function MyRecipes({ onRecipeChange }) {
         console.log("AFTER UPDATE:", newRecipes)
 
         return newRecipes
-    })
-}
+        })
+    }
+
+    const handleRecipeClick = async (recipe) => {
+        setSelectedRecipe(recipe)
+
+        try {
+            await RegisterRecipeView(recipe.id)
+        }catch(error) {
+            console.error(error)
+            alert(error.response?.data?.detail || "Failed to register recipe view.")
+        }
+    }
 
     return (
         recipes.length === 0 ? (
@@ -129,7 +146,7 @@ function MyRecipes({ onRecipeChange }) {
                             key={recipe.id}
                             recipe={recipe}
                             variant={"my-recipes"}
-                            onClick={() => setSelectedRecipe(recipe)}
+                            onClick={() => handleRecipeClick(recipe)}
                             onEdit={() => setRecipeToEdit(recipe)}
                             onDelete={handleDelete}
                             onFavorite={handleFavorite}

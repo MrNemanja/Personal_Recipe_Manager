@@ -1,7 +1,7 @@
 import "./ForgotPassword.css"
 import { useState } from "react"
 import { toast } from "react-toastify"
-import { requestPasswordReset } from "../services/UserService"
+import { requestPasswordReset } from "../../services/UserService"
 
 function ForgotPassword() {
   const [email, setEmail] = useState("")

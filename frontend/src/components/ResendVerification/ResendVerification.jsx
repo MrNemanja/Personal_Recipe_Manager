@@ -1,7 +1,7 @@
 import './ResendVerification.css'
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { ResendVerificationEmail } from "../services/UserService";
+import { ResendVerificationEmail } from "../../services/UserService";
 
 function ResendVerification() {
 

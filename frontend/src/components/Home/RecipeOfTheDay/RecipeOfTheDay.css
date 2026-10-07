@@ -1,0 +1,90 @@
+.recipe_of_the_day {
+    width: 100%;
+    background: #F7F1E8;
+    box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.recipe_of_the_day_content {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 80px 40px;
+}
+
+.recipe_of_the_day_header {
+    text-align: center;
+    margin-bottom: 45px;
+}
+
+.recipe_of_the_day_header h2 {
+    margin: 0 0 10px;
+    font-size: 36px;
+}
+
+.recipe_of_the_day_header p {
+    margin: 0;
+    font-size: 17px;
+}
+
+.recipe_of_the_day_card {
+    display: flex;
+    height: 400px;
+    overflow: hidden;
+    border-radius: 20px;
+    background: white;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.recipe_of_the_day_image {
+    width: 50%;
+    height: 100%;
+}
+
+.recipe_of_the_day_image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.recipe_of_the_day_info {
+    width: 50%;
+    height: 100%;
+    padding: 45px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.recipe_of_the_day_info h3{
+    margin: 0 0 25px;
+    font-size: 32px;
+}
+
+.recipe_of_the_day_meta {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.recipe_of_the_day_meta span,
+.recipe_of_the_day_meta p {
+    margin: 0;
+    font-size: 16px;
+}
+
+.recipe_of_the_day_meta button {
+    width: fit-content;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 8px;
+    background-color: #FF8C42;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.recipe_of_the_day_meta button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}

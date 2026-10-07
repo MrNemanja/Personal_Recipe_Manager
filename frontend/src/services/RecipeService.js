@@ -1,4 +1,5 @@
 import { api } from "./api"
+import { getVisitorId } from "../utils/visitorId"
 
 export async function GetMyRecipes(limit, offset) {
     
@@ -58,4 +59,25 @@ export async function UpdateRecipe(recipeId, formData) {
     const response = await api.put(`/recipes/${recipeId}`, formData)
     return response.data
 
+}
+
+export async function RegisterRecipeView(recipeId) {
+    const visitorId = getVisitorId()
+
+    await api.post(
+        `/recipes/${recipeId}/view`, 
+        null, 
+        {
+            headers: {
+                "X-Visitor-ID": visitorId
+            }
+        }
+    )
+}
+
+export async function GetRecipeOfTheDay() {
+    
+    const response = await api.get("/recipes/rotd")
+    return response.data
+    
 }
