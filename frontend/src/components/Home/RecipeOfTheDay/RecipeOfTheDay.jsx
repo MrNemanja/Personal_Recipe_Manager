@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react"
 import { GetRecipeOfTheDay } from "../../../services/RecipeService"
+import RecipeModal from "../../RecipeModal/RecipeModal"
 import "./RecipeOfTheDay.css"
 
 function RecipeOfTheDay() {
     const baseURL = import.meta.env.VITE_API_URL
     
     const [recipe, setRecipe] = useState(null)
+    const [selectedRecipe, setSelectedRecipe] = useState(null)
     const [noRecipes, setNoRecipes] = useState(false)
     const [loading, setLoading] = useState(true)
     
@@ -28,6 +30,17 @@ function RecipeOfTheDay() {
 
         fetchRecipeOfTheDay()
     }, [])
+
+    const handleRecipeClick = async (recipe) => {
+        setSelectedRecipe(recipe)
+    
+        try {
+            await RegisterRecipeView(recipe.id)
+        }catch(error) {
+            console.error(error)
+            alert(error.response?.data?.detail || "Failed to register recipe view.")
+        }
+    }
     
     return (
         <section className="recipe_of_the_day">
@@ -35,7 +48,7 @@ function RecipeOfTheDay() {
                 
                 <div className="recipe_of_the_day_header">
                     <h2>Recipe of the Day</h2>
-                    <p>A recipe worth trying today.</p>
+                    <p>A recipe loved by the community.</p>
                 </div>
 
                 {loading ? (
@@ -62,7 +75,7 @@ function RecipeOfTheDay() {
                                 🔥 {recipe.calories}
                             </p>
 
-                            <button>
+                            <button onClick={() => handleRecipeClick(recipe)}>
                                 View Recipe
                             </button>
                         </div>
@@ -70,6 +83,13 @@ function RecipeOfTheDay() {
                     </div>
                 )}
             </div>
+
+            {selectedRecipe && (
+                <RecipeModal
+                    recipe={selectedRecipe}
+                    onClose={() => setSelectedRecipe(null)}
+                />
+            )}
         </section>
     )
 }
