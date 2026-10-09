@@ -81,3 +81,14 @@ export async function GetRecipeOfTheDay() {
     return response.data
     
 }
+
+export async function GetAllRecipes(limit, offset) {
+    
+    const response = await api.get("/recipes/", {
+        params: {
+            limit: limit,
+            offset: offset
+        }
+    })
+    return response.data
+}

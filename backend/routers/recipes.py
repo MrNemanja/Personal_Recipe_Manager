@@ -7,7 +7,7 @@ from database import get_db
 from models import Recipe as RecipeModel, user_favorites, RecipeView
 from models import User
 from schemas import RecipeResponse, CreateRecipe, UserStatsResponse, MyRecipesResponse, MyFavoriteRecipesResponse, \
-    UpdateRecipe
+    UpdateRecipe, AllRecipesResponse
 from typing import List, Optional
 from services.file_service import save_recipe_image, delete_image
 import os
@@ -22,15 +22,19 @@ UPLOAD_DIR = "recipe_images"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # GET / -> list all recipes
-@router.get("/", response_model=List[RecipeResponse])
-async def get_recipes(limit: int = Query(10, gt=0, le=10, description="Max number of recipes to return"),
+@router.get("/", response_model=AllRecipesResponse)
+async def get_all_recipes(limit: int = Query(10, gt=0, le=10, description="Max number of recipes to return"),
                       offset: int = Query(0, ge=0, description="Number of recipes to skip from the beginning"),
                       current_user: Optional[User] = Depends(get_current_user_optional),
                       db: Session = Depends(get_db)):
 
-    recipes = db.query(RecipeModel).offset(offset).limit(limit).all()
+    query = db.query(RecipeModel).order_by(RecipeModel.id.desc())
 
-    return [
+    total = query.count()
+
+    all_recipes = query.offset(offset).limit(limit).all()
+
+    all_recipes = [
         {
             "id": recipe.id,
             "recipe_name": recipe.recipe_name,
@@ -41,8 +45,13 @@ async def get_recipes(limit: int = Query(10, gt=0, le=10, description="Max numbe
             "image_url": recipe.image_url,
             "is_favorite": current_user is not None and recipe in current_user.favorite_recipes
         }
-        for recipe in recipes
+        for recipe in all_recipes
     ]
+
+    return {
+        "all_recipes": all_recipes,
+        "total": total,
+    }
 
 @router.get("/me", response_model=MyRecipesResponse)
 async def get_my_recipes(
@@ -51,7 +60,7 @@ async def get_my_recipes(
         current_user: User = Depends(get_current_user),
         db: Session = Depends(get_db)
 ):
-    query = db.query(RecipeModel).filter(RecipeModel.owner_id == current_user.id).order_by(RecipeModel.id.asc())
+    query = db.query(RecipeModel).filter(RecipeModel.owner_id == current_user.id).order_by(RecipeModel.id.desc())
 
     total = query.count()
 
@@ -111,6 +120,7 @@ def get_user_favorites(current_user: User = Depends(get_current_user),
         .filter(
             user_favorites.c.user_id == current_user.id
         )
+        .order_by(RecipeModel.id.desc())
     )
 
     total = query.count()

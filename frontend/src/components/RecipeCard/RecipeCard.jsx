@@ -3,6 +3,7 @@ import "./RecipeCard.css"
 
 function RecipeCard({ recipe, variant, onClick, onEdit, onDelete, onFavorite, onFavoriteRemove }) {
     
+    const { currentUser } = useAuth()
     const baseURL = import.meta.env.VITE_API_URL
 
     const handleDelete = async (e) => {
@@ -13,6 +14,11 @@ function RecipeCard({ recipe, variant, onClick, onEdit, onDelete, onFavorite, on
 
     const handleFavorite = async (e) => {
         e.stopPropagation()
+
+        if (!currentUser) {
+            alert("You must log in first to add favorites.")
+            return
+        }
 
         onFavorite(recipe.id)
     }
@@ -46,7 +52,7 @@ function RecipeCard({ recipe, variant, onClick, onEdit, onDelete, onFavorite, on
                 <div className="recipe_actions">
                     {(variant === "home" || variant === "my-recipes") && (
                         <>
-                            {recipe.is_favorite ? (
+                            {recipe.is_favorite && currentUser ? (
                                 <button 
                                     className="remove_favorite_btn"
                                     onClick={handleRemoveFavorite}

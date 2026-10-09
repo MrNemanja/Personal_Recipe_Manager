@@ -63,6 +63,10 @@ class UserStatsResponse(BaseModel):
     recipe_count: int
     favorite_count: int
 
+class AllRecipesResponse(BaseModel):
+    all_recipes: List[RecipeResponse]
+    total: int
+
 class MyRecipesResponse(BaseModel):
     my_recipes: List[RecipeResponse]
     total: int

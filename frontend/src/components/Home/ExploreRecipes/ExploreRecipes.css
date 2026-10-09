@@ -1,0 +1,32 @@
+.explore_recipes { 
+    margin-top: 50px;
+    width: 100%; 
+    box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.06); 
+}
+
+.explore_recipes_content { 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    padding: 80px 40px; 
+}
+
+.explore_recipes_header { 
+    text-align: center; 
+    margin-bottom: 45px; 
+}
+
+.explore_recipes_header h2 { 
+    margin: 0 0 10px; 
+    font-size: 36px; 
+}
+
+.explore_recipes_header p { 
+    margin: 0; 
+    font-size: 17px; 
+}
+
+.explore_recipes_grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+}
